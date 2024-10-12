@@ -55,6 +55,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [SettingController::class, 'view'])->name('setting');
 
         Route::post('/tambah-paslon', [SettingController::class, 'add_paslon'])->name('paslon.add');
+        Route::post('/hapus-paslon', [SettingController::class, 'delete_paslon'])->name('paslon.drop');
     });
 
     Route::get('/download-template/{data}', [DataController::class, 'template_download'])->name('template');

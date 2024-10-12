@@ -13,12 +13,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        Inertia::share(function () {
+        Inertia::share('env', function () {
             return [
-                'app' => [
-                    'name' => env('app.name'),
-                    'url' => env('app.url'),
-                ],
+                'name' => env('APP_NAME'),
+                'url' => env('APP_URL'),
             ];
         });
     }

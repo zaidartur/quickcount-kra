@@ -274,14 +274,6 @@ class DataController extends Controller
         return Redirect::route('dpt')->with('message', $res);
     }
 
-    public function download_template(Request $request)
-    {
-        $validated = $request->validate([
-            'type'  => 'required|string'
-        ]);
-
-    }
-
     public function import_dpt(Request $request)
     {
         $validated = $request->validate([
