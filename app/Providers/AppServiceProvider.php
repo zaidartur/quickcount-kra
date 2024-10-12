@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
+use Inertia\Inertia;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -12,7 +13,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        Inertia::share(function () {
+            return [
+                'app' => [
+                    'name' => env('app.name'),
+                    'url' => env('app.url'),
+                ],
+            ];
+        });
     }
 
     /**

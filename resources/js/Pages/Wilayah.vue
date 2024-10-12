@@ -6,12 +6,12 @@
     const datas = defineProps({
         kec: Object,
         desa: Object,
+        apps: Object,
     })
-    // console.log(datas.kec)
 </script>
 
 <template>
-    <app-layout>
+    <app-layout :apps="datas.apps">
         <Wilayah :wilayah="datas" />
     </app-layout>
 </template>

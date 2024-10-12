@@ -8,116 +8,215 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-import InputNumber from 'primevue/inputnumber';
-import RadioButton from 'primevue/radiobutton';
-import Textarea from 'primevue/textarea';
-import Rating from 'primevue/rating';
-import Tag from 'primevue/tag';
+import Message from 'primevue/message';
+import { useForm, usePage } from '@inertiajs/vue3';
 
+const page  = usePage()
+const message = page.props.flash.message
+const toast = useToast()
 const datas = defineProps({
+    kec: Object,
     desa: Object,
 })
 
-const desa = ref({})
+const desa = ref(Array())
+const kecamatan = ref(Array())
 
 onMounted(() => {
-    ProductService.getProducts().then((data) => (products.value = data));
-    desa.value = [datas.desa];
+    ProductService.getProducts().then((data) => (multidesa.value = data));
 });
 
-const toast = useToast();
+const initData = () => {
+    if (datas.desa.length > 0) {
+        desa.value = []
+        datas.desa.map((val, i) => {
+            desa.value.push(val);
+        }) 
+    } else {
+        desa.value = []
+    }
+    // desa.value = []
+    
+    if (datas.kec.length > 0) {
+        kecamatan.value = []
+        datas.kec.map((kc) => {
+            kecamatan.value.push({
+                label: kc.kec_name,
+                value: kc.kec_id
+            })
+        })
+    } else {
+        kecamatan.value = []
+    }
+} 
+
+initData()
 const dt = ref();
-const products = ref();
-const productDialog = ref(false);
-const deleteProductDialog = ref(false);
-const deleteProductsDialog = ref(false);
-const product = ref({});
-const selectedProducts = ref();
+const errorCode = ref('')
+const errorName = ref('')
+const errorKec = ref('')
+const modalHeader = ref('Tambah Desa')
+const multidesa = ref();
+const desaDialog = ref(false);
+const deleteDesaDialog = ref(false);
+const deleteMultiDesaDialog = ref(false);
+const isDesa = ref({});
+const desaTerpilih = ref();
+const kecamatanTerpilih = ref()
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS }
 });
-const submitted = ref(false);
-const statuses = ref([
-    { label: 'INSTOCK', value: 'instock' },
-    { label: 'LOWSTOCK', value: 'lowstock' },
-    { label: 'OUTOFSTOCK', value: 'outofstock' }
-]);
 
-function formatCurrency(value) {
-    if (value) return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-    return;
-}
+const submitted = ref(false);
+const form = useForm({
+    id: '',
+    kec: '',
+    code: 0,
+    name: '',
+    type: 'new'
+})
 
 function openNew() {
-    product.value = {};
+    isDesa.value = {};
+    form.kec = null
+    form.code = 0,
+    form.name = '',
+    form.type = 'new'
+    kecamatanTerpilih.value = null
+
+    errorCode.value = ''
+    errorName.value = ''
+    errorKec.value = ''
+
     submitted.value = false;
-    productDialog.value = true;
+    desaDialog.value = true;
 }
 
 function hideDialog() {
-    productDialog.value = false;
+    desaDialog.value = false;
     submitted.value = false;
 }
 
-function saveProduct() {
-    submitted.value = true;
+const checkKecamatan = () => {
+    if (kecamatanTerpilih.value) {
+        errorKec.value = ''
+        return true
+    } else {
+        errorKec.value = 'Kecamatan belum dipilih'
+        return false
+    }
+}
 
-    if (product?.value.name?.trim()) {
-        if (product.value.id) {
-            product.value.inventoryStatus = product.value.inventoryStatus.value ? product.value.inventoryStatus.value : product.value.inventoryStatus;
-            products.value[findIndexById(product.value.id)] = product.value;
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
+const checkCode = () => {
+    if ((parseInt(form.code) < 100 || parseInt(form.code) > 9999)) {
+        errorCode.value = 'Kode Desa/Kelurahan tidak sesuai'
+        return false
+    } else {
+        errorCode.value = ''
+        return true
+    }
+}
+
+const checkName = () => {
+    if (form.name) {
+        errorName.value = ''
+        return true
+    } else {
+        errorName.value = 'Nama Desa/Kelurahan wajib diisi'
+        return false
+    }
+}
+
+const saveDesa = () => {
+    submitted.value = true
+    // if (kecamatanTerpilih.value && form.code && form.name) {
+    if (checkKecamatan() && checkCode() && checkName()) {
+        if (form.code > 100 && form.code < 9999) {
+            form.kec = kecamatanTerpilih.value.value
+            console.log(form)
+            form.post('/data-wilayah/desa', {
+                resetOnSuccess: true,
+                onSuccess: (res) => {
+                    const messages = res.props.flash.message
+                    initData()
+                    alert_response(messages)
+                    desaDialog.value = false
+                    submitted.value = false
+                },
+                onError: () => {
+                    toast.add({ severity: 'error', summary: 'Peringatan', detail: 'Input data tidak sesuai', life: 3000 });
+                    submitted.value = false
+                }
+            })
         } else {
-            product.value.id = createId();
-            product.value.code = createId();
-            product.value.image = 'product-placeholder.svg';
-            product.value.inventoryStatus = product.value.inventoryStatus ? product.value.inventoryStatus.value : 'INSTOCK';
-            products.value.push(product.value);
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
+            toast.add({ severity: 'error', summary: 'Peringatan', detail: 'Kode Desa/Kelurahan tidak sesuai', life: 3000 });
+            submitted.value = false
         }
-
-        productDialog.value = false;
-        product.value = {};
+    } else {
+        submitted.value = false
+        checkKecamatan()
+        checkCode()
+        checkName()
+        toast.add({ severity: 'error', summary: 'Perhatian', detail: 'Mohon untuk mengisi semua inputan', life: 3000 });
     }
 }
 
 function editProduct(prod) {
     // product.value = { ...prod };
-    datas.desa = { ...prod}
-    productDialog.value = true;
+    isDesa.value = { ...prod}
+    form.id   = isDesa.value.id
+    form.type = 'edit'
+    form.code = isDesa.value.desakel_id
+    form.name = isDesa.value.desakel_name
+    kecamatanTerpilih.value = {
+        label: isDesa.value.kec_name,
+        value: isDesa.value.kec_id
+    }
+
+    errorCode.value = ''
+    errorName.value = ''
+    errorKec.value = ''
+
+    desaDialog.value = true;
+}
+
+const alert_response = (rsp) => {
+    if (rsp.status === 'error') {
+        toast.add({ severity: 'error', summary: 'Error', detail: rsp.msg, life: 3000 });
+    } else if (rsp.status === 'success') {
+        toast.add({ severity: 'success', summary: 'Berhasil', detail: rsp.msg, life: 3000 });
+    }
 }
 
 function confirmDeleteProduct(prod) {
-    product.value = prod;
-    deleteProductDialog.value = true;
+    isDesa.value = prod;
+    deleteDesaDialog.value = true;
 }
 
 function deleteProduct() {
-    products.value = products.value.filter((val) => val.id !== product.value.id);
-    deleteProductDialog.value = false;
-    product.value = {};
-    toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });
-}
+    submitted.value = true
+    // init form
+    form.id     = isDesa.value.id
+    form.kec    = isDesa.value.kec_id
+    form.code   = isDesa.value.desakel_id
+    form.name   = isDesa.value.desakel_name
+    form.type   = 'single'
 
-function findIndexById(id) {
-    let index = -1;
-    for (let i = 0; i < datas.desa.length; i++) {
-        if (datas.desa[i].desakel_id === id) {
-            index = i;
-            break;
+    form.post('data-wilayah/hapus-desa', {
+        resetOnSuccess: true,
+        onSuccess: (res) => {
+            const messages = res.props.flash.message
+            initData()
+            alert_response(messages)
+            deleteDesaDialog.value = false
+            submitted.value = false
+            isDesa.value = {}
+        },
+        onError: () => {
+            toast.add({ severity: 'error', summary: 'Peringatan', detail: 'Terjadi kesalahan pada sistem', life: 3000 });
+            submitted.value = false
         }
-    }
-
-    return index;
-}
-
-function createId() {
-    let id = '';
-    var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for (var i = 0; i < 5; i++) {
-        id += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return id;
+    })
 }
 
 function exportCSV() {
@@ -125,30 +224,43 @@ function exportCSV() {
 }
 
 function confirmDeleteSelected() {
-    deleteProductsDialog.value = true;
+    deleteMultiDesaDialog.value = true
 }
 
-function deleteSelectedProducts() {
-    products.value = products.value.filter((val) => !selectedProducts.value.includes(val));
-    deleteProductsDialog.value = false;
-    selectedProducts.value = null;
-    toast.add({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
-}
-
-function getStatusLabel(status) {
-    switch (status) {
-        case 'INSTOCK':
-            return 'success';
-
-        case 'LOWSTOCK':
-            return 'warn';
-
-        case 'OUTOFSTOCK':
-            return 'danger';
-
-        default:
-            return null;
+function deleteMultiDesaTerpilih() {
+    submitted.value = true
+    // initiate
+    let uid = []
+    let code = []
+    let name = []
+    if (desaTerpilih.value.length > 0 ) {
+        desaTerpilih.value.map((ds) => {
+            uid.push(ds.id)
+            code.push(ds.kec_id)
+            name.push(ds.kec_name)
+        })
     }
+
+    form.id     = uid.toString()
+    form.code   = code.toString()
+    form.name   = name.toString()
+    form.type   = 'multi'
+
+    form.post('/data-wilayah/hapus-desa', {
+        resetOnSuccess: true,
+        onSuccess: (res) => {
+            const messages = res.props.flash.message
+            initData()
+            alert_response(messages)
+            deleteMultiDesaDialog.value = false
+            desaTerpilih.value = null
+            submitted.value = false        
+        },
+        onError: () => {
+            toast.add({ severity: 'error', summary: 'Peringatan', detail: 'Terjadi kesalahan pada sistem', life: 3000 });
+            submitted.value = false
+        }
+    })
 }
 </script>
 
@@ -158,27 +270,27 @@ function getStatusLabel(status) {
         <div class="card">
             <Toolbar class="mb-6">
                 <template #start>
-                    <Button label="Baru" icon="pi pi-plus" severity="secondary" class="mr-2" @click="openNew" />
-                    <Button label="Hapus" icon="pi pi-trash" severity="secondary" @click="confirmDeleteSelected" :disabled="!selectedProducts || !selectedProducts.length" />
+                    <Button label="Baru" icon="pi pi-plus" severity="success" class="mr-2" @click="openNew" />
+                    <Button label="Hapus" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected" :disabled="!desaTerpilih || !desaTerpilih.length" />
                 </template>
 
                 <template #end>
-                    <Button label="Import" icon="pi pi-download" severity="success" class="mr-2" @click="openNew" />
-                    <Button label="Export" icon="pi pi-upload" severity="secondary" @click="exportCSV($event)" :disabled="desa.length === 0 ? 'true' : 'false'" />
+                    <Button label="Import" icon="pi pi-download" severity="success" class="mr-2" @click="openNew" outlined />
+                    <Button label="Export" icon="pi pi-upload" severity="primary" @click="exportCSV($event)" :disabled="desa.length > 0 ? false : true" outlined />
                 </template>
             </Toolbar>
 
             <DataTable
                 ref="dt"
-                v-model:selection="selectedProducts"
-                :value="datas.desa"
+                v-model:selection="desaTerpilih"
+                :value="desa"
                 dataKey="id"
                 :paginator="true"
                 :rows="10"
                 :filters="filters"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 :rowsPerPageOptions="[5, 10, 25]"
-                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+                currentPageReportTemplate="Menampilkan {first} sampai {last} dari {totalRecords} Desa/Kelurahan"
             >
                 <template #header>
                     <div class="flex flex-wrap gap-2 items-center justify-between">
@@ -205,85 +317,60 @@ function getStatusLabel(status) {
             </DataTable>
         </div>
 
-        <Dialog v-model:visible="productDialog" :style="{ width: '450px' }" header="Product Details" :modal="true">
+        <Dialog v-model:visible="desaDialog" :style="{ width: '450px' }" :header="modalHeader" :modal="true" :closable="false">
             <div class="flex flex-col gap-6">
-                <img v-if="product.image" :src="`https://primefaces.org/cdn/primevue/images/product/${product.image}`" :alt="product.image" class="block m-auto pb-4" />
                 <div>
-                    <label for="name" class="block font-bold mb-3">Name</label>
-                    <InputText id="name" v-model.trim="product.name" required="true" autofocus :invalid="submitted && !product.name" fluid />
-                    <small v-if="submitted && !product.name" class="text-red-500">Name is required.</small>
+                    <label for="kecamatan" class="block font-bold mb-3">Nama Kecamatan</label>
+                    <Select id="kecamatan" v-model="kecamatanTerpilih" :options="kecamatan" optionLabel="label" placeholder="Pilih Kecamatan" autofocus @change="checkKecamatan"  :invalid="errorKec.length > 0" fluid></Select>
+                </div>
+                <div class="mb-1 -mt-10" v-if="errorKec.length">
+                    <label for="" class="font-semibold w-24">&nbsp;</label>
+                    <Message severity="error" class="">{{ errorKec }}</Message>
                 </div>
                 <div>
-                    <label for="description" class="block font-bold mb-3">Description</label>
-                    <Textarea id="description" v-model="product.description" required="true" rows="3" cols="20" fluid />
+                    <label for="code" class="block font-bold mb-3">Kode Desa/Kelurahan</label>
+                    <InputText id="code" type="number" v-model="form.code" required="true" :invalid="errorCode.length > 0" @keyup="checkCode" fluid />
+                </div>
+                <div class="mb-1 -mt-10" v-if="errorCode.length">
+                    <label for="" class="font-semibold w-24">&nbsp;</label>
+                    <Message severity="error" class="">{{ errorCode }}</Message>
                 </div>
                 <div>
-                    <label for="inventoryStatus" class="block font-bold mb-3">Inventory Status</label>
-                    <Select id="inventoryStatus" v-model="product.inventoryStatus" :options="statuses" optionLabel="label" placeholder="Select a Status" fluid></Select>
+                    <label for="name" class="block font-bold mb-3">Nama Desa/Kelurahan</label>
+                    <InputText id="name" v-model="form.name" required="true" :invalid="errorName.length > 0" @keyup="checkName" fluid />
                 </div>
-
-                <div>
-                    <span class="block font-bold mb-4">Category</span>
-                    <div class="grid grid-cols-12 gap-4">
-                        <div class="flex items-center gap-2 col-span-6">
-                            <RadioButton id="category1" v-model="product.category" name="category" value="Accessories" />
-                            <label for="category1">Accessories</label>
-                        </div>
-                        <div class="flex items-center gap-2 col-span-6">
-                            <RadioButton id="category2" v-model="product.category" name="category" value="Clothing" />
-                            <label for="category2">Clothing</label>
-                        </div>
-                        <div class="flex items-center gap-2 col-span-6">
-                            <RadioButton id="category3" v-model="product.category" name="category" value="Electronics" />
-                            <label for="category3">Electronics</label>
-                        </div>
-                        <div class="flex items-center gap-2 col-span-6">
-                            <RadioButton id="category4" v-model="product.category" name="category" value="Fitness" />
-                            <label for="category4">Fitness</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-12 gap-4">
-                    <div class="col-span-6">
-                        <label for="price" class="block font-bold mb-3">Price</label>
-                        <InputNumber id="price" v-model="product.price" mode="currency" currency="USD" locale="en-US" fluid />
-                    </div>
-                    <div class="col-span-6">
-                        <label for="quantity" class="block font-bold mb-3">Quantity</label>
-                        <InputNumber id="quantity" v-model="product.quantity" integeronly fluid />
-                    </div>
+                <div class="mb-5 -mt-10" v-if="errorName.length">
+                    <label for="code" class="font-semibold w-24">&nbsp;</label>
+                    <Message severity="error" class="">{{ errorName }}</Message>
                 </div>
             </div>
 
             <template #footer>
-                <Button label="Cancel" icon="pi pi-times" text @click="hideDialog" />
-                <Button label="Save" icon="pi pi-check" @click="saveProduct" />
+                <Button label="Batal" icon="pi pi-times" text @click="hideDialog" :disabled="submitted" />
+                <Button label="Simpan" icon="pi pi-check" @click="saveDesa" :disabled="submitted" />
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="deleteProductDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
+        <Dialog v-model:visible="deleteDesaDialog" :style="{ width: '450px' }" header="Confirm" :modal="true" :closable="false" >
             <div class="flex items-center gap-4">
                 <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="product"
-                    >Are you sure you want to delete <b>{{ product.name }}</b
-                    >?</span
+                <span v-if="isDesa">Anda ingin menghapus <b>{{ isDesa.desakel_name + ' (' + isDesa.kec_name + ')' }}</b> ?</span
                 >
             </div>
             <template #footer>
-                <Button label="No" icon="pi pi-times" text @click="deleteProductDialog = false" />
-                <Button label="Yes" icon="pi pi-check" @click="deleteProduct" />
+                <Button label="Tidak" icon="pi pi-times" text @click="deleteDesaDialog = false" :disabled="submitted" />
+                <Button label="Ya, Konfirmasi" icon="pi pi-check" @click="deleteProduct" :disabled="submitted" />
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="deleteProductsDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
+        <Dialog v-model:visible="deleteMultiDesaDialog" :style="{ width: '450px' }" header="Confirm" :modal="true" :closable="false">
             <div class="flex items-center gap-4">
                 <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="product">Are you sure you want to delete the selected products?</span>
+                <span v-if="isDesa">Anda yakin ingin menghapus {{ desaTerpilih.length }} data yang dicentang?</span>
             </div>
             <template #footer>
-                <Button label="No" icon="pi pi-times" text @click="deleteProductsDialog = false" />
-                <Button label="Yes" icon="pi pi-check" text @click="deleteSelectedProducts" />
+                <Button label="Tidak" icon="pi pi-times" text @click="deleteMultiDesaDialog = false" :disabled="submitted" />
+                <Button label="Ya, Konfirmasi" icon="pi pi-check" text @click="deleteMultiDesaTerpilih" :disabled="submitted" />
             </template>
         </Dialog>
     </div>

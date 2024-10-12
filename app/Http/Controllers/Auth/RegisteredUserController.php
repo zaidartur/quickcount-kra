@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+use Ramsey\Uuid\Uuid;
 
 class RegisteredUserController extends Controller
 {
@@ -37,7 +38,8 @@ class RegisteredUserController extends Controller
         ]);
 
         $user = User::create([
-            'name' => $request->name,
+            'name'  => $request->name,
+            'uuid'  => Uuid::uuid4()->toString(),
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'level' => 1,

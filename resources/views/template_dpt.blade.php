@@ -1,0 +1,13 @@
+<table>
+    <thead>
+    <tr>
+        <th>nama_kecamatan</th>
+        <th>nama_desa</th>
+        <th>kode_kecamatan</th>
+        <th>kode_desa</th>
+        <th>tahun</th>
+        <th>jumlah</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>

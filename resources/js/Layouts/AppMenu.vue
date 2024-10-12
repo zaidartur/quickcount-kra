@@ -24,7 +24,7 @@ const model = ref([
         label: 'SETTING',
         items: [
             { label: 'Setting', icon: 'pi pi-cog', to: '/setting' },
-            // { label: 'Profile', icon: 'pi pi-user', to: '/setting' },
+            { label: 'Data User', icon: 'pi pi-users', to: '/setting' },
             { label: user.name, icon: 'pi pi-user', to: '/setting' }
         ]
     }

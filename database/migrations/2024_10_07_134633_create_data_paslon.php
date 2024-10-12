@@ -11,14 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('data_dpt', function (Blueprint $table) {
+        Schema::create('data_paslon', function (Blueprint $table) {
             $table->id();
-            $table->string('kotakab_id', '6');
-            $table->string('kec_id', '10');
-            $table->string('desakel_id', '10');
-            $table->string('full_id', '10');
-            $table->integer('tahun_dpt');
-            $table->integer('total');
+            $table->string('uuid_paslon', '40')->unique();
+            $table->string('no_urut', '2');
+            $table->string('nama_paslon', '200');
+            $table->string('foto_paslon')->nullable();
+            $table->integer('tahun');
             $table->timestamps();
         });
     }
@@ -28,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('data_dpt');
+        Schema::dropIfExists('data_paslon');
     }
 };

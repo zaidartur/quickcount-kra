@@ -12,7 +12,7 @@ const datas = defineProps({
 </script>
 
 <template>
-    <Head title="Data Wilayah" />
+    <Head title="Data Wilayah" apps="AA" />
     <Kecamatan :kec="datas.wilayah.kec" />
-    <Desa :desa="datas.wilayah.desa" />
+    <Desa :desa="datas.wilayah.desa" :kec="datas.wilayah.kec" />
 </template>

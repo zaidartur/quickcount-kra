@@ -35,11 +35,12 @@ import Ripple from 'primevue/ripple';
 import ConfirmDialog from 'primevue/confirmdialog';
 import ConfirmPopup from 'primevue/confirmpopup';
 import Dialog from 'primevue/dialog';
+import AnimateOnScroll from 'primevue/animateonscroll';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
+    title: (title) => `${title}`,
     resolve: (name) =>
         resolvePageComponent(
             `./Pages/${name}.vue`,
@@ -71,6 +72,7 @@ createInertiaApp({
             .directive('badge', BadgeDirective)
             .directive('ripple', Ripple)
             .directive('styleclass', StyleClass)
+            .directive('animateonscroll', AnimateOnScroll)
 
             .component('Toast', Toast)
             .component('ConfirmDialog', ConfirmDialog)

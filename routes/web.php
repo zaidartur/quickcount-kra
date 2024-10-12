@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DataController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SettingController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -31,22 +32,32 @@ Route::get('/setting', function () {
     return Inertia::render('Setting');
 })->middleware(['auth', 'verified'])->name('setting');
 
-// Route::get('/data-wilayah', function () {
-//     return Inertia::render('Wilayah');
-// })->middleware(['auth', 'verified'])->name('wilayah');
-
-Route::get('/daftar-pemilih-tetap', function () {
-    return Inertia::render('Pemilih');
-})->middleware(['auth', 'verified'])->name('dpt');
-
 Route::middleware('auth')->group(function () {
-    Route::get('/data-wilayah', [DataController::class, 'wilayah'])->name('wilayah');
-    Route::get('/data-wilayah/kecamatan', [DataController::class, 'list_kecamatan'])->name('wilayah.listkec');
+    Route::prefix('/data-wilayah')->group(function() {
+        Route::get('/', [DataController::class, 'wilayah'])->name('wilayah');
+        Route::get('/kecamatan', [DataController::class, 'list_kecamatan'])->name('wilayah.listkec');
 
-    Route::post('/data-wilayah/kecamatan', [DataController::class, 'add_kecamatan'])->name('wilayah.kec');
-    Route::post('/data-wilayah/hapus-kecamatan', [DataController::class, 'delete_kecamatan'])->name('wilayah.delkec');
-    // Route::post('/data-wilayah/hapus-kecamatan-terpilih', [DataController::class, 'delete_kecamatan_multi'])->name('wilayah.delkec_multi');
+        Route::post('/kecamatan', [DataController::class, 'add_kecamatan'])->name('wilayah.kec');
+        Route::post('/desa', [DataController::class, 'add_desa'])->name('wilayah.desa');
+        Route::post('/hapus-kecamatan', [DataController::class, 'delete_kecamatan'])->name('wilayah.delkec');
+        Route::post('/hapus-desa', [DataController::class, 'delete_desa'])->name('wilayah.deldesa');
+    });
 
+    Route::prefix('daftar-pemilih-tetap')->group(function() {
+        Route::get('/', [DataController::class, 'dpt'])->name('dpt');
+
+        Route::post('/import-dpt', [DataController::class, 'import_dpt'])->name('dpt.import');
+        Route::post('/simpan-dpt', [DataController::class, 'add_dpt'])->name('dpt.add');
+        Route::post('/hapus-dpt', [DataController::class, 'delete_dpt'])->name('dpt.drop');
+    });
+
+    Route::prefix('setting')->group(function() {
+        Route::get('/', [SettingController::class, 'view'])->name('setting');
+
+        Route::post('/tambah-paslon', [SettingController::class, 'add_paslon'])->name('paslon.add');
+    });
+
+    Route::get('/download-template/{data}', [DataController::class, 'template_download'])->name('template');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

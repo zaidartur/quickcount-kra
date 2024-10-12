@@ -4,8 +4,13 @@ import { computed, ref, watch } from 'vue';
 import AppFooter from './AppFooter.vue';
 import AppSidebar from './AppSidebar.vue';
 import AppTopbar from './AppTopbar.vue';
+import { config } from 'tailwindcss-primeui';
 
 const { layoutConfig, layoutState, isSidebarActive, resetMenu } = useLayout();
+
+const apps = defineProps({
+    apps: Object
+})
 
 const outsideClickListener = ref(null);
 
@@ -61,7 +66,7 @@ function isOutsideClicked(event) {
             <div class="layout-main">
                 <slot></slot>
             </div>
-            <app-footer></app-footer>
+            <app-footer :apps="apps.apps"></app-footer>
         </div>
         <div class="layout-mask animate-fadein"></div>
     </div>

@@ -185,14 +185,6 @@ function confirmDeleteData(kc) {
     deleteKecamatan.value = true;
 }
 
-function deleteProduct() {
-    // products.value = products.value.filter((val) => val.id !== product.value.id);
-    // deleteKecamatan.value = false;
-    // product.value = {};
-    console.log(isKecamatan.value)
-    toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });
-}
-
 function exportCSV() {
     dt.value.exportCSV();
 }
@@ -247,13 +239,13 @@ function deleteSelectedData() {
         <div class="card">
             <Toolbar class="mb-6">
                 <template #start>
-                    <Button label="Baru" icon="pi pi-plus" severity="primary" class="mr-2" @click="openNew" />
+                    <Button label="Baru" icon="pi pi-plus" severity="success" class="mr-2" @click="openNew" />
                     <Button label="Delete" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected" :disabled="!kecamatanTerpilih || !kecamatanTerpilih.length" />
                 </template>
 
                 <template #end>
                     <Button label="Import" icon="pi pi-download" severity="success" class="mr-2" outlined @click="exportCSV($event)" />
-                    <Button label="Export" icon="pi pi-upload" severity="info" outlined @click="exportCSV($event)" :disabled="kec.length === 0 ? 'true' : 'false'" />
+                    <Button label="Export" icon="pi pi-upload" severity="primary" outlined @click="exportCSV($event)" :disabled="kec.length > 0 ? false : true" />
                 </template>
             </Toolbar>
 
@@ -308,7 +300,7 @@ function deleteSelectedData() {
                 <label for="name" class="font-semibold w-24">Nama Kecamatan</label>
                 <InputText id="name" class="flex-auto" autocomplete="off" v-model="kecamatan.kec_name" :required="true" :invalid="errorName.length > 0" @keyup="checkName" />
             </div>
-            <div class="flex items-center gap-4 mb-4 -mt-6" v-if="errorName.length">
+            <div class="flex items-center gap-4 mb-8 -mt-6" v-if="errorName.length">
                 <label for="code" class="font-semibold w-24">&nbsp;</label>
                 <Message severity="error" class="">{{ errorName }}</Message>
             </div>
@@ -321,25 +313,23 @@ function deleteSelectedData() {
         <Dialog v-model:visible="deleteKecamatan" :style="{ width: '450px' }" header="Confirm" :modal="true" :closable="false" >
             <div class="flex items-center gap-4">
                 <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="product"
-                    >Are you sure you want to delete <b>{{ product.name }}</b
-                    >?</span
+                <span v-if="isKecamatan">Anda yakin ingin menghapus <b>{{ isKecamatan.kec_name }}</b>?</span
                 >
             </div>
             <template #footer>
-                <Button label="No" icon="pi pi-times" text @click="deleteKecamatan = false" :disabled="submitted" />
-                <Button label="Yes" icon="pi pi-check" @click="delete_data" :disabled="submitted" />
+                <Button label="Tidak" icon="pi pi-times" text @click="deleteKecamatan = false" :disabled="submitted" />
+                <Button label="Ya, Konfirmasi" icon="pi pi-check" @click="delete_data" :disabled="submitted" />
             </template>
         </Dialog>
 
         <Dialog v-model:visible="deleteKecamatanTerpilih" :style="{ width: '450px' }" header="Confirm" :modal="true" :closable="false" >
             <div class="flex items-center gap-4">
                 <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="product">Are you sure you want to delete the selected products?</span>
+                <span v-if="isKecamatan">Anda yakin ingin menghapus {{ kecamatanTerpilih.length }} data yang dicentang?</span>
             </div>
             <template #footer>
-                <Button label="No" icon="pi pi-times" text @click="deleteKecamatanTerpilih = false" :disabled="submitted" />
-                <Button label="Yes" icon="pi pi-check" text @click="deleteSelectedData" :disabled="submitted" />
+                <Button label="Tidak" icon="pi pi-times" text @click="deleteKecamatanTerpilih = false" :disabled="submitted" />
+                <Button label="Ya, Konfirmasi" icon="pi pi-check" text @click="deleteSelectedData" :disabled="submitted" />
             </template>
         </Dialog>
     </div>
