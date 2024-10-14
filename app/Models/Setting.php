@@ -15,6 +15,11 @@ class Setting extends Model
         return DB::table('config_app')->orderBy('id')->first();
     }
 
+    public function update_config($data, $id)
+    {
+        return DB::table('config_app')->where('id', $id)->update($data);
+    }
+
     public function data_paslon()
     {
         return DB::table('data_paslon')->where('tahun', date('Y'))->orderBy('no_urut')->get();

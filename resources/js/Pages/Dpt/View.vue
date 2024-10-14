@@ -276,7 +276,7 @@ function deleteProduct() {
 
 function confirmDeleteSelected() {
     deleteProductsDialog.value = true
-    console.log(dptTerpilih.value)
+    // console.log(dptTerpilih.value)
 }
 
 function deleteSelectedProducts() {

@@ -11,6 +11,7 @@ import Card from 'primevue/card';
 import Panel from 'primevue/panel';
 import FileUpload from 'primevue/fileupload';
 import Message from 'primevue/message';
+import Skeleton from 'primevue/skeleton';
 
 const paslon = defineProps({
     lists: Object,
@@ -28,11 +29,14 @@ initData()
 const page = usePage().props
 const toast = useToast()
 const paslonDialog = ref(false)
+const deleteDialog = ref(false)
+const progressSpinner = ref(false)
 const errorName = ref('')
 const errorNomor = ref('')
 const errorTahun = ref('')
 const errorFile = ref('')
 const src = ref(null)
+const singlePaslon = ref(null)
 const submitted = ref(false)
 const form = useForm({
     id: '',
@@ -52,12 +56,23 @@ const resetError = () => {
     errorFile.value = ''
 }
 
+const reset_form = () => {
+    form.id     = ''
+    form.urut   = ''
+    form.name   = ''
+    form.foto   = null
+    form.tahun  = ''
+    form.type   = ''
+    form.foto_status = ''
+}
+
 const new_paslon = () => {
-    form.reset()
+    reset_form()
     form.type = 'new'
     src.value = null
     resetError()
     paslonDialog.value = true
+    console.log(form)
 }
 
 const edit_paslon = (props) => {
@@ -142,6 +157,7 @@ const checkFile = () => {
 }
 
 const onFileSelect = (event) => {
+    progressSpinner.value = true
     if (checkFile()) {
         if (form.type === 'edit') {
             form.foto_status = 'new'
@@ -156,7 +172,10 @@ const onFileSelect = (event) => {
             src.value = e.target.result
         };
 
+        progressSpinner.value = false
         reader.readAsDataURL(file)
+    } else {
+        progressSpinner.value = false
     }
 }
 
@@ -183,6 +202,37 @@ const save_paslon = () => {
         checkNomor()
         checkTahun()
         checkFile()
+        submitted.value = false
+    }
+}
+
+const drop_alert = (prop) => {
+    singlePaslon.value = prop
+    deleteDialog.value = true
+}
+
+const delete_paslon = () => {
+    submitted.value = true
+    reset_form()
+    if (singlePaslon.value) {
+        form.id = singlePaslon.value.uuid_paslon
+        form.post('/setting/hapus-paslon', {
+            resetOnSuccess: true,
+            onSuccess: (res) => {
+                const messages = res.props.flash.message
+                initData()
+                alert_response(messages)
+                deleteDialog.value = false
+                singlePaslon.value = null
+                submitted.value = false
+            },
+            onError: () => {
+                toast.add({ severity: 'error', summary: 'Peringatan', detail: 'Input data tidak sesuai', life: 3000 });
+                submitted.value = false
+            }
+        })
+    } else {
+        toast.add({ severity: 'error', summary: 'Peringatan', detail: 'Data tidak dikenali', life: 3000 });
         submitted.value = false
     }
 }
@@ -226,7 +276,7 @@ const alert_response = (rsp) => {
                         </template>
                         <template #footer>
                             <div class="flex gap-4 mt-1">
-                                <Button label="Hapus" severity="danger" icon="pi pi-trash" outlined class="w-full" />
+                                <Button label="Hapus" severity="danger" icon="pi pi-trash" outlined class="w-full" @click="drop_alert(dp)" />
                                 <Button label="Edit" severity="warn" icon="pi pi-pencil" class="w-full" @click="edit_paslon(dp)" />
                             </div>
                         </template>
@@ -270,11 +320,14 @@ const alert_response = (rsp) => {
                         customUpload
                     />
                 </div>
-                <div class="flex flex-col items-center justify-items-center gap-4">
-                    <img v-if="src" :src="src" alt="Paslon" class="shadow-md rounded-xl w-full sm:w-64 " />
-                </div>
                 <div class="flex items-center gap-4 mb-4 -mt-4" v-if="errorFile.length > 0">
                     <Message severity="error" class="text-center">{{ errorFile }}</Message>
+                </div>
+                <div class="flex flex-col items-center justify-items-center gap-4" v-if="progressSpinner">
+                    <Skeleton width="10rem" height="12rem"></Skeleton>
+                </div>
+                <div class="flex flex-col items-center justify-items-center gap-4" v-if="!progressSpinner">
+                    <img v-if="src" :src="src" alt="Paslon" class="shadow-md rounded-xl w-full sm:w-64 " />
                 </div>
                 <div class="mb-5">&nbsp;</div>
             </div>
@@ -282,6 +335,17 @@ const alert_response = (rsp) => {
             <template #footer>
                 <Button label="Batal" severity="danger" icon="pi pi-times" text @click="paslonDialog = false" :disabled="submitted" />
                 <Button label="Simpan" icon="pi pi-save" @click="save_paslon" :disabled="submitted" />
+            </template>
+        </Dialog>
+
+        <Dialog v-model:visible="deleteDialog" :style="{ width: '450px' }" header="Confirm" :modal="true" :closable="false">
+            <div class="flex items-center gap-4">
+                <i class="pi pi-exclamation-triangle !text-3xl" />
+                <span v-if="singlePaslon">Anda ingin menghapus data <b>{{ singlePaslon.nama_paslon }} ({{ singlePaslon.no_urut }})</b> ?</span>
+            </div>
+            <template #footer>
+                <Button label="Tidak" icon="pi pi-times" severity="danger" text @click="deleteDialog = false" :disabled="submitted" />
+                <Button label="Ya, Konfirmasi" icon="pi pi-check" @click="delete_paslon" :disabled="submitted" />
             </template>
         </Dialog>
     </div>

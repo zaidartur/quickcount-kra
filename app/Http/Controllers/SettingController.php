@@ -28,7 +28,61 @@ class SettingController extends Controller
 
     public function update_config(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name'      => 'required|string',
+            'pemilik'   => 'required|string',
+            'tahun'     => 'required|numeric',
+        ]);
+
+        if ($validated) {
+            $check = $this->setting->get_app();
+            if (isset($request->logo)) {
+                if (File::exists(public_path('/uploads/app'))) {
+                    File::makeDirectory(public_path('/uploads/app'), 0777, true, true);
+                }
+                if (!empty($check->app_logo)) {
+                    $old = public_path() . $check->app_logo;
+                    if (File::exists($old)) {
+                        File::delete($old);
+                    }
+                }
+                $path = public_path('/uploads/app');
+                $logo = 'logo.'.$request->logo->extension();  
+                $request->logo->move($path, $logo);
+            } else {
+                $logo = null;
+            }
+            $data = [
+                'app_name'      => $request->name,
+                'app_pemilik'   => $request->pemilik,
+                'app_tahun'     => $request->tahun,
+                'updated_at'    => date('Y-m-d H:i:s'),
+            ];
+            if (isset($request->webiste)) {
+                $data += ['app_website'   => $request->tahun,];
+            }
+            if (isset($request->alamat)) {
+                $data += ['app_address'   => $request->alamat,];
+            }
+            if (!empty($logo)) {
+                $data += ['app_logo'    => '/uploads/app/' . $logo,];
+            }
+
+            $save = $this->setting->update_config($data, $request->id);
+            if ($save) {
+                $status = 'success';
+                $msg = 'Data berhasil di update';
+            } else {
+                $status = 'error';
+                $msg = 'Data gagal di update';
+            }
+        } else {
+            $status = 'error';
+            $msg = 'Data tidak sesuai';
+        }
+
+        $res  = ['status' => $status, 'msg' => $msg];
+        return Redirect::route('setting')->with('message', $res);
     }
 
     public function add_paslon(Request $request)
@@ -80,7 +134,7 @@ class SettingController extends Controller
             'tahun'         => $request->tahun,
             'created_at'    => date('Y-m-d H:i:s'),
         ];
-        if (isset($request->foto)) {
+        if (!empty($foto)) {
             $data += [
                 'foto_paslon'   => '/uploads/paslon/' . $foto,
             ];

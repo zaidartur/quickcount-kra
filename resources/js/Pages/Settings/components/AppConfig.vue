@@ -81,10 +81,34 @@ const onFileSelect = (event) => {
 }
 
 const upadateConfig = () => {
-    if (form.id && form.name && form.pemilik && form.tahun && form.website) {
-        console.log(form)
+    submitted.value = true
+    if (form.id && form.name && form.pemilik && form.tahun) {
+        // console.log(form)
+        form.post('/setting/update-config', {
+            resetOnSuccess: true,
+            onSuccess: (res) => {
+                const messages = res.props.flash.message
+                initData()
+                alert_response(messages)
+                dialogConfig.value = false
+                submitted.value = false
+            },
+            onError: () => {
+                toast.add({ severity: 'error', summary: 'Peringatan', detail: 'Input data tidak sesuai', life: 3000 });
+                submitted.value = false
+            }
+        })
     } else {
         toast.add({ severity: 'error', summary: 'Peringatan', detail: 'Mohon untuk mengisi semua inputan', life: 3000 });
+        submitted.value = false
+    }
+}
+
+const alert_response = (rsp) => {
+    if (rsp.status === 'error') {
+        toast.add({ severity: 'error', summary: 'Error', detail: rsp.msg, life: 3000 });
+    } else if (rsp.status === 'success') {
+        toast.add({ severity: 'success', summary: 'Berhasil', detail: rsp.msg, life: 3000 });
     }
 }
 </script>
@@ -177,8 +201,8 @@ const upadateConfig = () => {
             </div>
 
             <template #footer>
-                <Button label="Batal" severity="danger" icon="pi pi-times" text @click="dialogConfig = false" />
-                <Button label="Update" icon="pi pi-save" @click="upadateConfig" />
+                <Button label="Batal" severity="danger" icon="pi pi-times" text @click="dialogConfig = false" :disabled="submitted" />
+                <Button label="Update" icon="pi pi-save" @click="upadateConfig" :disabled="submitted" />
             </template>
         </Dialog>
     </div>

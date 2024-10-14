@@ -3,6 +3,7 @@
 use App\Http\Controllers\DataController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -54,8 +55,13 @@ Route::middleware('auth')->group(function () {
     Route::prefix('setting')->group(function() {
         Route::get('/', [SettingController::class, 'view'])->name('setting');
 
+        Route::post('/update-config', [SettingController::class, 'update_config'])->name('config.update');
         Route::post('/tambah-paslon', [SettingController::class, 'add_paslon'])->name('paslon.add');
         Route::post('/hapus-paslon', [SettingController::class, 'delete_paslon'])->name('paslon.drop');
+    });
+
+    Route::prefix('data-user')->group(function() {
+        Route::get('/', [UserController::class, 'view'])->name('users');
     });
 
     Route::get('/download-template/{data}', [DataController::class, 'template_download'])->name('template');
