@@ -1,6 +1,7 @@
 <script setup>
-import { defineProps, ref } from 'vue';
-import { useForm, usePage } from '@inertiajs/vue3';
+import { defineProps, readonly, ref } from 'vue';
+import { router, useForm, usePage } from '@inertiajs/vue3';
+import axios from 'axios';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
 import Toolbar from 'primevue/toolbar';
@@ -8,14 +9,15 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-import InputNumber from 'primevue/inputnumber';
-import FileUpload from 'primevue/fileupload';
 import Popover from 'primevue/popover';
-import ProgressSpinner from 'primevue/progressspinner';
+import Divider from 'primevue/divider';
 import Password from 'primevue/password';
+import Slider from 'primevue/slider';
+import InputGroup from 'primevue/inputgroup';
 
 const page  = usePage()
 const message = page.props.flash.message
+const auth = page.props.auth.user
 const toast = useToast()
 const datas = defineProps({
     users: Object,
@@ -62,7 +64,7 @@ const initWilayah = () => {
 
 initData()
 initWilayah()
-// console.log(accountLists.value)
+// console.log(page.props.auth.user)
 const dt = ref();
 const accountSelected = ref([])
 const kecamatanSelected = ref()
@@ -72,6 +74,10 @@ const headerTitle = ref('Tambah User')
 const addDialog = ref(false)
 const deleteDialog = ref(false)
 const deleteSelectedDialog = ref(false)
+const changePwdDialog = ref(false)
+const passwordDialog = ref(false)
+const closableModal = ref(false)
+
 const errorKec = ref('')
 const errorDesa = ref('')
 const errorName = ref('')
@@ -79,7 +85,11 @@ const errorEmail = ref('')
 const errorPwd = ref('')
 const errorLevel = ref('')
 const errorKode = ref('')
+
 const editData = ref()
+const pwdGenerator = ref('')
+const pwdStrength = ref(24)
+const pwdStrengthLabel = ref('Lemah')
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS }
 });
@@ -101,8 +111,87 @@ const roles = [
     {label: 'Admin Desa/Kelurahan', value: 3},
 ]
 
+const roleLabel = [
+    {label: 'Super Admin', value: 0},
+    {label: 'Admin', value: 1},
+    {label: 'Admin Kecamatan', value: 2},
+    {label: 'Admin Desa', value: 3},
+]
+
+const isRole = (val) => {
+    let isLabel = null
+    roleLabel.map((rl) => {
+        if (rl.value === val) {
+            isLabel = rl.label
+        }
+    })
+    return isLabel
+}
+
+const generatePwd = () => {
+    let charactersArray = 'a-z'.split(',')
+    let CharacterSet = ''
+    let password = ''
+    let size = 8
+    
+    switch (pwdStrength.value) {
+      case 12:
+        size = 10
+        charactersArray = 'a-z,A-Z'.split(',')
+        pwdStrengthLabel.value = 'Lemah'
+        break
+      case 24:
+        size = 12
+        charactersArray = 'a-z,A-Z,0-9'.split(',')
+        pwdStrengthLabel.value = 'Cukup'
+        break
+     case 36:
+        size = 14
+        charactersArray = 'a-z,A-Z,0-9,#'.split(',')
+        pwdStrengthLabel.value = 'Bagus'
+        break
+     case 48:
+        size = 16
+        charactersArray = 'a-z,A-Z,0-9,#'.split(',')
+        pwdStrengthLabel.value = 'Bagus Sekali'
+        break
+    }
+    if (charactersArray.indexOf('a-z') >= 0) {
+      CharacterSet += 'abcdefghijklmnopqrstuvwxyz'
+    }
+    if (charactersArray.indexOf('A-Z') >= 0) {
+      CharacterSet += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    }
+    
+    if (charactersArray.indexOf('0-9') >= 0) {
+      CharacterSet += '0123456789'
+    }
+    if (charactersArray.indexOf('#') >= 0) {
+      CharacterSet += '![]{}()%&*$#^<>~@|'
+    }
+    for (let i = 0; i < size; i++) {
+      password += CharacterSet.charAt(Math.floor(Math.random() * CharacterSet.length))
+    }
+    
+    pwdGenerator.value = password
+}
+
+const checkName = () => {
+    if (form.name) {
+        if (form.name.length < 4 || form.name.length > 30) {
+            errorName.value = 'Nama User 4-30 karakter'
+            return false
+        } else {
+            errorName.value = ''
+            return true
+        }
+    } else {
+        errorName.value = 'Nama User harus di isi'
+        return false
+    }
+}
+
 const validateEmail = () => {
-    console.log(form.email)
     if (form.email && form.email.length > 0) {
         if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(form.email)) {
             errorEmail.value = ''
@@ -157,6 +246,26 @@ const checkDesa = () => {
     }
 }
 
+const checkPwd = () => {
+    if (form.type === 'new') {
+        if (form.pass) {
+            if (form.pass.length >= 8) {
+                errorPwd.value = ''
+                return true
+            } else {
+                errorPwd.value = 'Password minimal 8 karakter dan berisi huruf besar dan kecil, simbol, dan angka'
+                return false
+            }
+        } else {
+            errorPwd.value = 'Password harus di isi'
+            return false
+        }
+    } else {
+        errorPwd.value = ''
+        return true
+    }
+}
+
 const clearError = () => {
     errorKec.value = ''
     errorDesa.value = ''
@@ -176,7 +285,7 @@ const selectKec = () => {
         if (tmp.kec_id === kecamatanSelected.value.value) {            
             selectDesa.value.push({
                 label: tmp.desakel_name,
-                value: tmp.desakel_id
+                value: tmp.full_id
             })
         }
     })
@@ -187,23 +296,175 @@ const openNew = () => {
     headerTitle.value = 'Tambah User'
     form.type = 'new'
     clearError()
+    pwdStrength.value = 24
+    generatePwd()
     selectDesa.value = ''
     kecamatanSelected.value = ''
     desaSelected.value = ''
     levelSelected.value = ''
 
+    submitted.value = false
+    closableModal.value = false
     addDialog.value = true
 }
 
-const saveUser = () => {
-    if (validateEmail() && checkLevel() && checkKecamatan() && checkDesa()) {
-        console.log('submit', form)
+const copyPwd = () => {
+    navigator.clipboard.writeText(pwdGenerator.value)
+    form.pass = pwdGenerator.value
+    checkPwd()
+
+    toast.add({ severity: 'success', summary: 'Sukses', detail: 'Password berhasil di salin', life: 3000 });
+}
+
+const findByValue = (val, objects) => {
+    let data = []
+    // console.log(val, objects)
+    objects.map((arr) => {
+        if (arr.value === val) {
+            data = arr
+        }
+    })
+    return data
+}
+
+const saveUser = async() => {
+    submitted.value = true
+    if (checkName() && validateEmail() && checkLevel() && checkKecamatan() && checkDesa() && checkPwd()) {
+        // init
+        const cek  = form.type === 'new' ? await axios.get('/data-user/cek-email/' + form.email).then((res) => { return res.data }) : 'true'
+        form.kode  = (levelSelected.value.value === 2 ? kecamatanSelected.value.value : (levelSelected.value.value === 3 ? desaSelected.value.value : null))
+        form.level = levelSelected.value.value
+        
+        // submitting if validated
+        if (cek === 'true') {
+            errorEmail.value = ''
+            form.post('data-user/tambah-user', {
+                resetOnSuccess: true,
+                onSuccess: (res) => {
+                    const messages = res.props.flash.message
+                    initData()
+                    alert_response(messages)
+                    kecamatanSelected.value = []
+                    desaSelected.value = []
+                    submitted.value = false
+                    addDialog.value = false
+                },
+                onError: () => {
+                    toast.add({ severity: 'error', summary: 'Peringatan', detail: 'Terjadi kesalahan pada sistem', life: 3000 });
+                    submitted.value = false
+                }
+            })
+        } else {
+            errorEmail.value = 'Alamat email sudah digunakan'
+            toast.add({ severity: 'error', summary: 'Peringatan', detail: 'Alamat email sudah digunakan', life: 3000 });
+            submitted.value = false
+        }
     } else {
+        checkName()
         validateEmail()
         checkLevel()
         checkKecamatan()
         checkDesa()
+        checkPwd()
+        submitted.value = false
     }
+}
+
+const detailUser = (prop) => {
+    editUser(prop)
+    headerTitle.value = 'Detail User ' + form.name
+    form.type = 'detail'
+    submitted.value = true
+    closableModal.value = true
+}
+
+const editUser = (prop) => {
+    selectDesa.value = []
+    selectKec.value = []
+    desaSelected.value = []
+    kecamatanSelected.value = []
+    headerTitle.value = 'Edit User'
+    form.reset()
+    form.type = 'edit'
+    form.name   = prop.name
+    form.uuid   = prop.uuid
+    form.email  = prop.email
+    form.level  = prop.level
+    form.kode   = prop.kode
+
+    levelSelected.value = findByValue(prop.level, roles)
+    
+    if (prop.level === 2) {
+        kecamatanSelected.value = findByValue(prop.kode.toString(), kecamatan.value)
+        desa.value.map((ds) => {
+            if (ds.kec_id === prop.kode.toString()) {            
+                selectDesa.value.push({
+                    label: ds.desakel_name,
+                    value: ds.full_id
+                })
+            }
+        })
+    }
+    if (prop.level === 3) {
+        const isKode = prop.kode.toString()
+        const kec = isKode.substr(2, 2)
+        kecamatanSelected.value = findByValue(kec, kecamatan.value)
+        desa.value.map((ds) => {
+            if (ds.kec_id === kec) {            
+                selectDesa.value.push({
+                    label: ds.desakel_name,
+                    value: ds.full_id
+                })
+            }
+        })
+        desaSelected.value = findByValue(isKode, selectDesa.value)
+    }
+    
+    submitted.value = false
+    closableModal.value = false
+    addDialog.value = true
+}
+
+const change_pwd = (prop) => {
+    pwdStrength.value = 24
+    generatePwd()
+    form.reset()
+    form.name   = prop.name
+    form.uuid   = prop.uuid
+    submitted.value = false
+    changePwdDialog.value = true
+}
+
+const confirm_password = () => {
+    submitted.value = true
+    if (form.uuid && form.pass) {
+        // console.log(form)
+        form.post('data-user/password-user', {
+            resetOnSuccess: true,
+            onSuccess: (res) => {
+                const messages = res.props.flash.message
+                initData()
+                alert_response(messages)
+                submitted.value = false
+                changePwdDialog.value = false
+
+                if (form.uuid === auth.uuid) {
+                    passwordDialog.value = true
+                }
+            },
+            onError: () => {
+                toast.add({ severity: 'error', summary: 'Peringatan', detail: 'Terjadi kesalahan pada sistem', life: 3000 });
+                submitted.value = false
+            }
+        })
+    } else {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Password baru belum di isi', life: 3000 });
+        submitted.value = false
+    }
+}
+
+const _logout = () => {
+    form.post(route('logout'))
 }
 
 const delete_user = (prop) => {
@@ -214,12 +475,41 @@ const delete_user = (prop) => {
     form.email  = prop.email
     form.level  = prop.level
     form.kode   = prop.kode
+    form.pass   = null
 
+    submitted.value = false
     deleteDialog.value = true
 }
 
-const delete_user_selected = () => {
-    //
+const delete_user_confirm = () => {
+    submitted.value = true
+    if (form.pass) {
+        form.post('data-user/hapus-user', {
+            resetOnSuccess: true,
+            onSuccess: (res) => {
+                const messages = res.props.flash.message
+                initData()
+                alert_response(messages)
+                submitted.value = false
+                deleteDialog.value = false
+            },
+            onError: () => {
+                toast.add({ severity: 'error', summary: 'Peringatan', detail: 'Terjadi kesalahan pada sistem', life: 3000 });
+                submitted.value = false
+            }
+        })
+    } else {
+        toast.add({ severity: 'error', summary: 'Peringatan', detail: 'Mohon untuk mengisi password Anda untuk konfirmasi', life: 3000 });
+        submitted.value = false
+    }
+}
+
+const alert_response = (rsp) => {
+    if (rsp.status === 'error') {
+        toast.add({ severity: 'error', summary: 'Error', detail: rsp.msg, life: 3000 });
+    } else if (rsp.status === 'success') {
+        toast.add({ severity: 'success', summary: 'Berhasil', detail: rsp.msg, life: 3000 });
+    }
 }
 </script>
 
@@ -227,15 +517,10 @@ const delete_user_selected = () => {
     <Head title="Data User" />
     <div>
         <div class="card">
-            <Toolbar class="mb-6">
+            <Toolbar class="mb-6" v-if="auth.level < 2">
                 <template #start>
                     <Button label="Baru" icon="pi pi-plus" severity="success" class="mr-2" @click="openNew" />
                     <!-- <Button label="Hapus" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected" :disabled="dptTerpilih.length < 1" /> -->
-                </template>
-
-                <template #end>
-                    <Button label="Hapus" icon="pi pi-trash" severity="danger" class="mr-2" @click="deleteSelectedDialog = true" outlined :disabled="accountSelected.length < 1" />
-                    <!-- <Button label="Export" icon="pi pi-upload" severity="primary" @click="exportCSV($event)" :disabled="pemilih.length < 1" outlined /> -->
                 </template>
             </Toolbar>
 
@@ -263,167 +548,158 @@ const delete_user_selected = () => {
                     </div>
                 </template>
 
-                <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
+                <!-- <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column> -->
                 <Column field="name" header="Nama User" sortable style="min-width: 12rem"></Column>
                 <Column field="email" header="Alamat Email" sortable style="min-width: 16rem"></Column>
-                <Column field="level" header="Role" sortable style="min-width: 16rem"></Column>
-                <Column field="created_at" header="Tanggal Buat" sortable style="min-width: 16rem"></Column>
-                <!-- <Column field="created_at" header="Tanggal Buat" sortable style="min-width: 16rem">
+                <Column field="level" header="Role" sortable style="min-width: 16rem">
                     <template #body="slotProps">
-                        {{ formatNumber(slotProps.data.total) }}
+                        {{ isRole(slotProps.data.level) }}
                     </template>
-                </Column> -->
+                </Column>
+                <Column field="created_at" header="Tanggal Buat" sortable style="min-width: 16rem">
+                    <template #body="slotProps">
+                        {{ slotProps.data.created_at }}
+                    </template>
+                </Column>
                 <Column :exportable="false" style="min-width: 12rem">
                     <template #body="slotProps">
-                        <Button icon="pi pi-info" outlined rounded severity="info" class="mr-2" @click="editProduct(slotProps.data)" v-tooltip.bottom="'Detail User'" />
-                        <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="editProduct(slotProps.data)" v-tooltip.bottom="'Edit User'" />
-                        <Button icon="pi pi-key" outlined rounded severity="warn" class="mr-2" @click="editProduct(slotProps.data)" v-tooltip.bottom="'Ubah Password'" />
-                        <Button icon="pi pi-trash" outlined rounded severity="danger" @click="delete_user(slotProps.data)" v-tooltip.bottom="'Hapus User'" />
+                        <Button icon="pi pi-info" outlined rounded severity="info" class="mr-2" @click="detailUser(slotProps.data)" v-tooltip.bottom="'Detail User'" />
+                        <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="editUser(slotProps.data)" v-tooltip.bottom="'Edit User'" />
+                        <Button icon="pi pi-key" outlined rounded severity="warn" class="mr-2" @click="change_pwd(slotProps.data)" v-tooltip.bottom="'Ubah Password'" />
+                        <Button icon="pi pi-trash" outlined rounded severity="danger" @click="delete_user(slotProps.data)" v-tooltip.bottom="'Hapus User'" v-if="slotProps.data.uuid !== auth.uuid" />
                     </template>
                 </Column>
             </DataTable>
         </div>
 
-        <Dialog v-model:visible="addDialog" :style="{ width: '450px' }" :header="headerTitle" :modal="true" :closable="false" >
+        <Dialog v-model:visible="addDialog" :style="{ width: (form.type === 'detail' ? '900px' : '450px') }" :header="headerTitle" :modal="true" :closable="closableModal" >
+            <div class="flex flex-col md:flex-row md:w-12/12">
+                <div class="flex flex-col gap-6" :class="(form.type === 'detail' && auth.level < 2) ? 'md:w-5/12 ml-5' : 'md:w-full'">
+                    <div>
+                        <label for="name" class="block font-bold">Nama Lengkap</label>
+                        <InputText id="name" v-model="form.name" placeholder="Nama User" required="true" fluid @change="checkName" :invalid="errorName.length > 0" :disabled="submitted" autofocus />
+                    </div>
+                    <div class="-mt-4" v-if="errorName.length">
+                        <Message severity="error" class="">{{ errorName }}</Message>
+                    </div>
+                    <div>
+                        <label for="email" class="block font-bold">Alamat Email</label>
+                        <InputText id="email" type="email" v-model="form.email" placeholder="Alamat Email" :class="form.type === 'edit' ? 'cursor-not-allowed' : ''" required="true" fluid @change="validateEmail" @blur="validateEmail" :invalid="errorEmail.length > 0" :readonly="form.type === 'edit' ? true : false" :disabled="submitted" />
+                    </div>
+                    <div class="-mt-4" v-if="errorEmail.length">
+                        <Message severity="error" class="">{{ errorEmail }}</Message>
+                    </div>
+                    <div v-if="form.type === 'edit' && form.uuid === auth.uuid ? false : true">
+                        <label for="role" class="block font-bold">Role</label>
+                        <Select id="role" v-model="levelSelected" :options="roles" optionLabel="label" placeholder="Pilih Role" required="true" @change="checkLevel" :invalid="errorLevel.length > 0" fluid :disabled="submitted"></Select>
+                    </div>
+                    <div class="-mt-4" v-if="errorLevel.length">
+                        <Message severity="error" class="">{{ errorLevel }}</Message>
+                    </div>
+                    <div class="grid grid-cols-12 gap-4" v-if="(levelSelected.value === 2 || levelSelected.value === 3) && (form.type === 'edit' && form.uuid === auth.uuid ? false : true)">
+                        <div :class="levelSelected.value === 2 ? 'col-span-12' : 'col-span-6'">
+                            <div v-if="levelSelected.value === 2 || levelSelected.value === 3">
+                                <label for="kecamatan" class="block font-bold">Nama Kecamatan</label>
+                                <Select id="kecamatan" v-model="kecamatanSelected" :options="kecamatan" optionLabel="label" placeholder="Pilih Kecamatan" required="true" @change="selectKec" :invalid="errorKec.length > 0" fluid :disabled="submitted"></Select>
+                            </div>
+                            <div class="-mt-4" v-if="errorKec.length">
+                                <label for="" class="font-semibold w-24">&nbsp;</label>
+                                <Message severity="error" class="">{{ errorKec }}</Message>
+                            </div>
+                        </div>
+                        <div class="col-span-6">
+                            <div v-if="levelSelected.value === 3">
+                                <label for="desakel" class="block font-bold">Nama Desa/Kelurahan</label>
+                                <Select id="desakel" v-model="desaSelected" :options="selectDesa" optionLabel="label" placeholder="Pilih Desa/Kelurahan" required="true" @change="checkDesa" :invalid="errorDesa.length > 0" fluid :disabled="submitted"></Select>
+                            </div>
+                            <div class="-mt-4" v-if="errorDesa.length">
+                                <label for="" class="font-semibold w-24">&nbsp;</label>
+                                <Message severity="error" class="">{{ errorDesa }}</Message>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-if="form.type === 'new'">
+                        <label for="password" class="block font-bold">Password</label>
+                        <Password id="password" v-model="form.pass" placeholder="Password" required="true" fluid :toggleMask="true" :feedback="true" @change="checkPwd" :invalid="errorPwd.length > 0" :disabled="submitted" />
+                    </div> 
+                    <div class="-mt-4" v-if="errorPwd.length">
+                        <Message severity="error" class="">{{ errorPwd }}</Message>
+                    </div>
+                    <div v-if="form.type === 'new'">
+                        <label for="generate_password" class="block font-bold">Generated Password</label>
+                        <InputGroup class="mb-5">
+                            <InputText id="generate_password" v-model="pwdGenerator" placeholder="Generated Password" required="false" fluid :disabled="submitted" />
+                            <Button label="Salin" icon="pi pi-copy" v-tooltip.bottom="'Salin Password'" @click="copyPwd" :disabled="submitted" />
+                        </InputGroup>
+                        <Slider v-model="pwdStrength" :step="12" :min="12" :max="48" class="w-full" @change="generatePwd"  v-tooltip.bottom="pwdStrengthLabel" :disabled="submitted" />
+                    </div> 
+                    <div class="mb-2">&nbsp;</div>
+                </div>
+
+                <div class="w-full md:w-2/12" v-if="form.type === 'detail' && auth.level < 2">
+                    <Divider layout="vertical" class="!hidden md:!flex"><b>DETAIL</b></Divider>
+                </div>
+
+                <div class="w-full md:w-5/12 flex items-center justify-center py-5" v-if="form.type === 'detail' && auth.level < 2">
+                    <Button label="Sign Up" icon="pi pi-user-plus" severity="success" class="w-full max-w-[17.35rem] mx-auto"></Button>
+                </div>
+            </div>
+            <template #footer>
+                <Button :label="form.type === 'detail' ? 'Tutup' : 'Batal'" icon="pi pi-times" text @click="addDialog = false" :disabled="submitted" v-if="form.type !== 'detail'" />
+                <Button label="Simpan" icon="pi pi-check" @click="saveUser" :disabled="submitted" v-if="form.type !== 'detail'" />
+            </template>
+        </Dialog>
+
+        <Dialog v-model:visible="changePwdDialog" :style="{ width: '450px' }" :header="'Ubah Password ' + form.name" :modal="true">
             <div class="flex flex-col gap-6">
                 <div>
-                    <label for="name" class="block font-bold">Nama Lengkap</label>
-                    <InputText id="name" v-model="form.name" placeholder="Nama User" required="true" fluid @change="" :invalid="errorName.length > 0" autofocus />
-                </div>
-                <div class="-mt-10" v-if="errorName.length">
-                    <label for="" class="font-semibold w-24">&nbsp;</label>
-                    <Message severity="error" class="">{{ errorName }}</Message>
-                </div>
-                <div>
-                    <label for="email" class="block font-bold">Alamat Email</label>
-                    <InputText id="email" type="email" v-model="form.email" placeholder="Alamat Email" required="true" fluid @change="validateEmail" @blur="validateEmail" :invalid="errorEmail.length > 0" />
-                </div>
-                <div class="-mt-10" v-if="errorEmail.length">
-                    <label for="" class="font-semibold w-24">&nbsp;</label>
-                    <Message severity="error" class="">{{ errorEmail }}</Message>
-                </div>
-                <div>
-                    <label for="role" class="block font-bold">Role</label>
-                    <Select id="role" v-model="levelSelected" :options="roles" optionLabel="label" placeholder="Pilih Role" required="true" @change="checkLevel" :invalid="errorLevel.length > 0" fluid></Select>
-                </div>
-                <div class="-mt-10" v-if="errorLevel.length">
-                    <label for="" class="font-semibold w-24">&nbsp;</label>
-                    <Message severity="error" class="">{{ errorLevel }}</Message>
-                </div>
-                <div class="grid grid-cols-12 gap-4" v-if="levelSelected.value === 2 || levelSelected.value === 3">
-                    <div :class="levelSelected.value === 2 ? 'col-span-12' : 'col-span-6'">
-                        <div v-if="levelSelected.value === 2 || levelSelected.value === 3">
-                            <label for="kecamatan" class="block font-bold">Nama Kecamatan</label>
-                            <Select id="kecamatan" v-model="kecamatanSelected" :options="kecamatan" optionLabel="label" placeholder="Pilih Kecamatan" required="true" @change="selectKec" :invalid="errorKec.length > 0" fluid></Select>
-                        </div>
-                        <div class="-mt-4" v-if="errorKec.length">
-                            <label for="" class="font-semibold w-24">&nbsp;</label>
-                            <Message severity="error" class="">{{ errorKec }}</Message>
-                        </div>
-                    </div>
-                    <div class="col-span-6">
-                        <div v-if="levelSelected.value === 3">
-                            <label for="desakel" class="block font-bold">Nama Desa/Kelurahan</label>
-                            <Select id="desakel" v-model="desaSelected" :options="selectDesa" optionLabel="label" placeholder="Pilih Desa/Kelurahan" required="true" @change="checkDesa" :invalid="errorDesa.length > 0" fluid></Select>
-                        </div>
-                        <div class="-mt-4" v-if="errorDesa.length">
-                            <label for="" class="font-semibold w-24">&nbsp;</label>
-                            <Message severity="error" class="">{{ errorDesa }}</Message>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <label for="password" class="block font-bold">Password</label>
-                    <Password id="password" v-model="form.pass" placeholder="Password" required="true" fluid :toggleMask="true" :feedback="false" @change="" :invalid="errorPwd.length > 0" />
-                </div>
-                <div class="-mt-10" v-if="errorPwd.length">
-                    <label for="" class="font-semibold w-24">&nbsp;</label>
+                    <label for="password" class="block font-bold">Password Baru</label>
+                    <Password id="password" v-model="form.pass" placeholder="Password" required="true" fluid :toggleMask="true" :feedback="true" @change="checkPwd" :invalid="errorPwd.length > 0" :disabled="submitted" />
+                </div> 
+                <div class="-mt-4" v-if="errorPwd.length">
                     <Message severity="error" class="">{{ errorPwd }}</Message>
                 </div>
+                <div>
+                    <label for="generate_password" class="block font-bold">
+                        Generated Password 
+                        <Button icon="pi pi-question" size="small" text v-tooltip.right="'Gunakan password generator ini apabila bingung membuat password'" />
+                    </label>
+                    <InputGroup class="mb-5">
+                        <InputText id="generate_password" v-model="pwdGenerator" placeholder="Generated Password" required="false" fluid :disabled="submitted" />
+                        <Button label="Salin" icon="pi pi-copy" v-tooltip.bottom="'Salin Password'" @click="copyPwd" :disabled="submitted" />
+                    </InputGroup>
+                    <Slider v-model="pwdStrength" :step="12" :min="12" :max="48" class="w-full" @change="generatePwd"  v-tooltip.bottom="pwdStrengthLabel" :disabled="submitted" />
+                </div> 
                 <div class="mb-2">&nbsp;</div>
             </div>
             <template #footer>
-                <Button label="Batal" icon="pi pi-times" text @click="addDialog = false" :disabled="submitted" />
-                <Button label="Simpan" icon="pi pi-check" @click="saveUser" :disabled="submitted" />
+                <Button label="Batal" icon="pi pi-times" severity="danger" text @click="changePwdDialog = false" :disabled="submitted" />
+                <Button label="Update Password" icon="pi pi-check" @click="confirm_password" :disabled="submitted" />
             </template>
         </Dialog>
 
-        <!-- <Dialog v-model:visible="duplicateDialog" modal header="Import Data" :style="{ width: '35rem' }" :closable="true">
-            <span class="text-surface-500 dark:text-surface-400 block mb-8 text-center">
-                File berhasil di import dengan <b> {{ duplicateDataImport.length }} duplikat </b> data
-            </span>
-            <div class="text-surface-500 dark:text-surface-400 block mb-8 text-center">
-                <div v-if="duplicateDataImport.length > 0" class="w-full">
-                    <span v-for="duplicate in duplicateDataImport">
-                        <Button type="button" :label="duplicate.nama_desa" class="mr-1" outlined @click="displayDuplicate($event, duplicate)" /> 
-                    </span>
-                </div>
-
-                <Popover ref="opn" id="overlay_panel" style="width: 450px">
-                    <table class="w-full">
-                        <tbody>
-                            <tr>
-                                <td width="40%">Desa/Kelurahan</td>
-                                <td width="60%">:  {{ selectedDuplicate.nama_desa }}</td>
-                            </tr>
-                            <tr>
-                                <td>Kecamatan</td>
-                                <td>:  {{ selectedDuplicate.nama_kecamatan }}</td>
-                            </tr>
-                            <tr>
-                                <td>Tahun</td>
-                                <td>:  {{ selectedDuplicate.tahun }}</td>
-                            </tr>
-                            <tr>
-                                <td>Jumlah DPT</td>
-                                <td>:  {{ formatNumber(selectedDuplicate.jumlah) }}</td>
-                            </tr>
-                        </tbody>
-                    </table>                    
-                </Popover>
-            </div>
-            <div class="mb-8">&nbsp;</div>
-            <div class="flex justify-end gap-2">
-                <Button type="button" icon="pi pi-times" label="Tutup" severity="secondary" @click="duplicateDialog = false"></Button>
-            </div>
-        </Dialog>
-
-        <Dialog v-model:visible="templateDialog" :style="{ width: '450px' }" header="Peringatan" :modal="true">
+        <Dialog v-model:visible="passwordDialog" :style="{ width: '450px' }" header="Notifikasi" :modal="true" :closable="false">
             <div class="flex items-center gap-4">
-                <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="templateDialog">
-                    Template file yang dipilih tidak sesuai.
-                </span>
+                <i class="pi pi-check-circle !text-3xl" />
+                <span>Password berhasil dirubah</span>
             </div>
             <template #footer>
-                <Button label="Tutup" icon="pi pi-times" severity="danger" text @click="templateDialog = false" :disabled="submitted" />
+                <Button label="Konfirmasi" icon="pi pi-check" @click="_logout" :disabled="submitted" />
             </template>
-        </Dialog> -->
+        </Dialog>
 
-        <!-- <DeleteDialog
-            :label="form.name"
-            :show-dialog="deleteDialog"
-            :submitted="submitted"
-        /> -->
-        <Dialog v-model:visible="deleteDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
+        <Dialog v-model:visible="deleteDialog" :style="{ width: '450px' }" header="Konfirmasi Hapus" :modal="true">
             <div class="flex items-center gap-4">
                 <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="form">Anda ingin menghapus data <b>{{ form.name }}</b> ?</span>
+                <span v-if="form">Anda ingin menghapus user <b>{{ form.name }}</b> ({{ form.email }}) ?</span>
             </div>
+            <div class="mt-6 mb-6">
+                <label for="password" class="block font-bold">Masukkan Password Anda untuk konfirmasi</label>
+                <Password id="password" v-model="form.pass" placeholder="Password" required="true" fluid :toggleMask="false" :feedback="false" @change="checkPwd" :invalid="errorPwd.length > 0" :disabled="submitted" />
+            </div> 
             <template #footer>
                 <Button label="Tidak" icon="pi pi-times" severity="danger" text @click="deleteDialog = false" :disabled="submitted" />
-                <Button label="Ya, Konfirmasi" icon="pi pi-check" @click="deleteProduct" :disabled="submitted" />
-            </template>
-        </Dialog>
-
-        <Dialog v-model:visible="deleteSelectedDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
-            <div class="flex items-center gap-4">
-                <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="accountSelected">Anda ingin menghapus {{ accountSelected.length }} data yang dicentang?</span>
-            </div>
-            <template #footer>
-                <Button label="Tidak" icon="pi pi-times" severity="danger" text @click="deleteSelectedDialog = false" :disabled="submitted" />
-                <Button label="Ya, Konfirmasi" icon="pi pi-check" text @click="deleteSelectedProducts" :disabled="submitted" />
+                <Button label="Ya, Konfirmasi" icon="pi pi-check" @click="delete_user_confirm" :disabled="submitted" />
             </template>
         </Dialog>
     </div>

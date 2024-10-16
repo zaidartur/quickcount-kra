@@ -3,7 +3,9 @@
 use App\Http\Controllers\DataController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\StatistikController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VoteController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -34,6 +36,19 @@ Route::get('/setting', function () {
 })->middleware(['auth', 'verified'])->name('setting');
 
 Route::middleware('auth')->group(function () {
+    Route::prefix('/statistik')->group(function() {
+        Route::get('/', [StatistikController::class, 'view'])->name('stat');
+        Route::get('/detail/{uid}', [StatistikController::class, 'detail_statistik'])->name('stat.detail');
+    });
+
+    Route::prefix('/suara-masuk')->group(function() {
+        Route::get('/', [VoteController::class, 'view'])->name('vote');
+        Route::get('/detail/{uid}', [VoteController::class, 'detail_voting'])->name('vote.detail');
+
+        Route::post('/tambah-data', [VoteController::class, 'add_voting'])->name('vote.add');
+        Route::post('/hapus-data', [VoteController::class, 'delete_vote'])->name('vote.delete');
+    });
+
     Route::prefix('/data-wilayah')->group(function() {
         Route::get('/', [DataController::class, 'wilayah'])->name('wilayah');
         Route::get('/kecamatan', [DataController::class, 'list_kecamatan'])->name('wilayah.listkec');
@@ -62,6 +77,12 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('data-user')->group(function() {
         Route::get('/', [UserController::class, 'view'])->name('users');
+        Route::get('/detail-user/{uid}', [UserController::class, 'detail_user']);
+        Route::get('/cek-email/{mail}', [UserController::class, 'check_email']);
+
+        Route::post('/tambah-user', [UserController::class, 'add_user'])->name('users.add');
+        Route::post('/password-user', [UserController::class, 'change_pwd_user'])->name('users.pwd');
+        Route::post('/hapus-user', [UserController::class, 'delete_user'])->name('users.delete');
     });
 
     Route::get('/download-template/{data}', [DataController::class, 'template_download'])->name('template');

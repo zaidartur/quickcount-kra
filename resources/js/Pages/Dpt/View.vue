@@ -17,6 +17,7 @@ import ProgressSpinner from 'primevue/progressspinner';
 
 const page  = usePage()
 const message = page.props.flash.message
+const auth = page.props.auth.user
 const toast = useToast()
 const datas = defineProps({
     dpt: Object,
@@ -398,7 +399,7 @@ const displayDuplicate = (event, data) => {
     <Head title="Data Pemilih Tetap" />
     <div>
         <div class="card">
-            <Toolbar class="mb-6">
+            <Toolbar class="mb-6" v-if="auth.level < 2">
                 <template #start>
                     <!-- <Button label="Baru" icon="pi pi-plus" severity="success" class="mr-2" @click="openNew" /> -->
                     <Button label="Baru" icon="pi pi-plus" severity="success" class="mr-2" @click="openNew" />
@@ -425,7 +426,7 @@ const displayDuplicate = (event, data) => {
             >
                 <template #header>
                     <div class="flex flex-wrap gap-2 items-center justify-between">
-                        <h4 class="m-0">Daftar Pemilih Tetap tiap Desa/Kelurahan</h4>
+                        <h4 class="m-0">Daftar Pemilih Tetap</h4>
                         <IconField>
                             <InputIcon>
                                 <i class="pi pi-search" />
@@ -435,7 +436,7 @@ const displayDuplicate = (event, data) => {
                     </div>
                 </template>
 
-                <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
+                <Column selectionMode="multiple" style="width: 3rem" :exportable="false" v-if="auth.level < 2"></Column>
                 <Column field="kec_name" header="Kecamatan" sortable style="min-width: 12rem"></Column>
                 <Column field="desakel_name" header="Desa/Kelurahan" sortable style="min-width: 16rem"></Column>
                 <Column field="tahun_dpt" header="Tahun" sortable style="min-width: 16rem"></Column>
@@ -444,7 +445,7 @@ const displayDuplicate = (event, data) => {
                         {{ formatNumber(slotProps.data.total) }}
                     </template>
                 </Column>
-                <Column :exportable="false" style="min-width: 12rem">
+                <Column :exportable="false" style="min-width: 12rem" v-if="auth.level < 2">
                     <template #body="slotProps">
                         <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="editProduct(slotProps.data)" />
                         <Button icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteProduct(slotProps.data)" />

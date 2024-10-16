@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Auth;
 
 use App\Models\Setting;
 
@@ -19,11 +20,15 @@ class SettingController extends Controller
 
     public function view()
     {
-        return Inertia::render('Setting', [
-            'apps'   => $this->setting->get_app(),
-            'status' => session('status'),
-            'paslon' => $this->setting->data_paslon(),
-        ]);
+        if (Auth::user()->level < 2) {
+            return Inertia::render('Setting', [
+                'apps'   => $this->setting->get_app(),
+                'status' => session('status'),
+                'paslon' => $this->setting->data_paslon(),
+            ]);
+        } else {
+            return abort(404);
+        }
     }
 
     public function update_config(Request $request)

@@ -761,7 +761,7 @@
         <p><strong>Error 404</strong></p>
 		<p>Halaman yang Anda tuju tidak ditemukan,</p>
 		<p>
-		  <button>Klik di bagian luar kotak popup ini untuk menutup, <br>atau Anda bisa memuat ulang</button>
+		  <button>Cobalah untuk memuat ulang, atau kembali ke halaman Dashboard</button>
 		</p>
 	  </article>
 	</main>

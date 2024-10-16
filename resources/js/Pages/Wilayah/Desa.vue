@@ -13,6 +13,7 @@ import { useForm, usePage } from '@inertiajs/vue3';
 
 const page  = usePage()
 const message = page.props.flash.message
+const auth = page.props.auth.user
 const toast = useToast()
 const datas = defineProps({
     kec: Object,
@@ -268,7 +269,7 @@ function deleteMultiDesaTerpilih() {
     <Head title="Data Wilayah" />
     <div>
         <div class="card">
-            <Toolbar class="mb-6">
+            <Toolbar class="mb-6" v-if="auth.level < 2">
                 <template #start>
                     <Button label="Baru" icon="pi pi-plus" severity="success" class="mr-2" @click="openNew" />
                     <Button label="Hapus" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected" :disabled="!desaTerpilih || !desaTerpilih.length" />
@@ -304,11 +305,11 @@ function deleteMultiDesaTerpilih() {
                     </div>
                 </template>
 
-                <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
+                <Column selectionMode="multiple" style="width: 3rem" :exportable="false" v-if="auth.level < 2"></Column>
                 <Column field="desakel_id" header="Code" sortable style="min-width: 12rem"></Column>
                 <Column field="desakel_name" header="Name" sortable style="min-width: 16rem"></Column>
                 <Column field="kec_name" header="Kecamatan" sortable style="min-width: 16rem"></Column>
-                <Column :exportable="false" style="min-width: 12rem">
+                <Column :exportable="false" style="min-width: 12rem" v-if="auth.level < 2">
                     <template #body="slotProps">
                         <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="editProduct(slotProps.data)" />
                         <Button icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteProduct(slotProps.data)" />

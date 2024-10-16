@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+
+use function PHPUnit\Framework\returnValueMap;
 
 class Data extends Model
 {
@@ -15,21 +18,40 @@ class Data extends Model
         return DB::table('data_kecamatan')->get();
     }
 
-    public function data_desa()
+    public function all_desa()
     {
         return DB::table('data_desa as dd')
+            ->leftJoin('data_kecamatan as dk', 'dk.kec_id', '=', 'dd.kec_id')
+            ->select('dd.id', 'dd.desakel_id', 'dd.kec_id', 'dd.desakel_name', 'dd.full_id', 'dk.kec_name')
+            ->orderBy('dd.desakel_id')->get();
+    }
+
+    public function data_desa()
+    {
+        $level = Auth::user()->level;
+        $data  = DB::table('data_desa as dd')
                 ->leftJoin('data_kecamatan as dk', 'dk.kec_id', '=', 'dd.kec_id')
-                ->select('dd.id', 'dd.desakel_id', 'dd.kec_id', 'dd.desakel_name', 'dk.kec_name')
-                ->orderBy('dd.desakel_id')->get();
+                ->select('dd.id', 'dd.desakel_id', 'dd.kec_id', 'dd.desakel_name', 'dd.full_id', 'dk.kec_name');
+        if ($level == 2) {
+            $data->where('dd.kec_id', Auth::user()->kode);
+        }
+        return $data->orderBy('dd.desakel_id')->get();
     }
 
     public function data_dpt()
     {
-        return DB::table('data_dpt as dpt')
+        $level = Auth::user()->level;
+        $data  = DB::table('data_dpt as dpt')
             ->leftJoin('data_kecamatan as dk', 'dk.kec_id', '=', 'dpt.kec_id')
             ->leftJoin('data_desa as dd', 'dd.full_id', '=', 'dpt.full_id')
-            ->select('dpt.*', 'dk.kec_name', 'dd.desakel_name')
-            ->get();
+            ->select('dpt.*', 'dk.kec_name', 'dd.desakel_name');
+        if ($level == 2) {
+            $data->where('dpt.kec_id', Auth::user()->kode);
+        }
+        if ($level == 3) {
+            $data->where('dpt.full_id', Auth::user()->kode);
+        }
+        return $data->get();
     }
 
     public function add_kecamatan($data)

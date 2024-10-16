@@ -16,19 +16,37 @@ const model = ref([
     {
         label: 'MASTER DATA',
         items: [
-            { label: 'Data Wilayah', icon: 'pi pi-map', to: '/data-wilayah' },
             { label: 'DPT', icon: 'pi pi-users', to: '/daftar-pemilih-tetap' },
         ]
     },
     {
         label: 'SETTING',
         items: [
-            { label: 'Setting', icon: 'pi pi-cog', to: '/setting' },
             { label: 'Data User', icon: 'pi pi-users', to: '/data-user' },
             { label: user.name, icon: 'pi pi-user', to: '/profile' }
         ]
     }
 ]);
+
+// conditional
+if (user.level < 2) {
+    model.value[2].items.unshift(
+        { label: 'Setting', icon: 'pi pi-cog', to: '/setting' },
+    )
+}
+if (user.level < 3) {
+    // model.value[0].items.push(
+    //     { label: 'Statistik', icon: 'pi pi-database', to: '/statistik' },
+    // )
+    model.value[1].items.unshift(
+        { label: 'Data Wilayah', icon: 'pi pi-map', to: '/data-wilayah' },
+    )
+}
+if (user.level > 1) {
+    model.value[0].items.push(
+        { label: 'Suara Masuk', icon: 'pi pi-envelope', to: '/suara-masuk' },
+    )
+}
 </script>
 
 <template>

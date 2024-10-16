@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Auth;
 
 use App\Models\Data;
 use App\Models\Setting;
@@ -24,12 +25,16 @@ class DataController extends Controller
 
     public function wilayah(Request $request)
     {
-        return Inertia::render('Wilayah', [
-            'apps'  => $this->setting->get_app(),
-            'status' => session('status'),
-            'kec'   => $this->data->data_kecamatan(),
-            'desa'  => $this->data->data_desa(),
-        ]);
+        if (Auth::user()->level < 3) {
+            return Inertia::render('Wilayah', [
+                'apps'  => $this->setting->get_app(),
+                'status' => session('status'),
+                'kec'   => $this->data->data_kecamatan(),
+                'desa'  => $this->data->data_desa(),
+            ]);
+        } else {
+            return abort(404);
+        }
     }
 
     public function dpt(Request $request)

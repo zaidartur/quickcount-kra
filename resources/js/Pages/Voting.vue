@@ -1,19 +1,18 @@
 <script setup>
 import { defineProps } from 'vue';
 import AppLayout from "@/Layouts/AppLayout.vue";
-import Users from '@/Pages/Users/View.vue'
+import Vote from '@/Pages/Voting/View.vue'
 
 const datas = defineProps({
-    apps: Object,
-    users: Object,
-    kec: Object,
-    desa: Object,
-})
+        apps: Object,
+        users: Object,
+        desa: Object,
+    })
 </script>
 
 <template>
     <app-layout :apps="datas.apps">
-        <Users :users="datas.users" :kec="datas.kec" :desa="datas.desa" />
+        <Vote :users="datas.users" :desa="datas.desa" />
     </app-layout>
 </template>
 
