@@ -3326,18 +3326,18 @@ const test = () => {
 
                     <div>
                         <label for="email" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Email</label>
-                        <InputText id="email" type="email" placeholder="Email address" class="w-full md:w-[30rem] mb-8" v-model="form.email" @blur="validateEmail" :invalid="form.errors.email ? true : false" :autofocus="true"  />
+                        <InputText id="email" type="email" placeholder="Email address" class="w-full md:w-[30rem] mb-8" v-model="form.email" @blur="validateEmail" :invalid="form.errors.email ? true : false" :disabled="form.processing" :autofocus="true" />
                         <Message severity="error" class="-mt-5 mb-5" v-if="form.errors.email">{{ form.errors.email }}</Message>
 
                         <label for="password" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Password</label>
-                        <Password id="password" v-model="form.password" placeholder="Password" :toggleMask="true" class="mb-4" fluid :feedback="false" v-on:keyup.enter="submit"></Password>
+                        <Password id="password" v-model="form.password" placeholder="Password" :toggleMask="true" class="mb-4" fluid :feedback="false" v-on:keyup.enter="submit" :disabled="form.processing"></Password>
 
                         <div class="flex items-center justify-between mt-2 mb-8 gap-8">
                             <div class="flex items-center">
-                                <Checkbox v-model="form.remember" id="rememberme1" binary class="mr-2"></Checkbox>
+                                <Checkbox v-model="form.remember" id="rememberme1" binary class="mr-2" :disabled="form.processing"></Checkbox>
                                 <label for="rememberme1">Remember me</label>
                             </div>
-                            <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Forgot password?</span>
+                            <!-- <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Forgot password?</span> -->
                         </div>
                         <Button label="Sign In" class="w-full" as="router-link" icon="pi pi-sign-out" :class="{ 'opacity-25': form.processing }" :disabled="form.processing" @click="submit"></Button>
                     </div>

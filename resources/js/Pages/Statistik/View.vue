@@ -26,6 +26,10 @@ const paslons = ref(new Array())
 const detailDialog = ref(false)
 const headerDetail = ref(null)
 
+const socket = io('http://localhost:3000', {
+    withCredentials: true,
+})
+
 const initData = () => {
     kecamatan.value = []
     paslons.value = []
@@ -53,6 +57,10 @@ const filtered_data = ref(kecamatan.value.slice(paginator.value, (paginator.valu
 // const randomValue = (nm) => {
 //     return custom_clr[randomIndex(nm)]
 // }
+
+socket.on('connection', (socket) => {
+    //
+})
 
 const filtered = (e) => {
     paginator.value = e.first
@@ -171,8 +179,8 @@ const setChartOptions = () => {
             />
         </div>
 
-        <Dialog v-model:visible="detailDialog" maximizable modal :header="headerDetail" :style="{ width: '50rem' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
-            <div class="flex flex-col md:flex-row md:w-12/12 w-full">
+        <Dialog v-model:visible="detailDialog" maximizable modal :header="headerDetail" :style="{ width: '75rem' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
+            <div class="flex flex-col md:flex-row md:w-12/12">
                 <div class="flex flex-col md:w-5/12">
                     <div class="card mb-0">
                         <div class="flex justify-between mb-4">
@@ -185,22 +193,22 @@ const setChartOptions = () => {
                                 <i class="pi pi-envelope text-primary-500 !text-xl"></i>
                             </div> -->
                         </div>
-                        <div class="mb-3" v-for="pas in paslons">
+                        <div class="mb-3 w-full" v-for="pas in paslons">
                             <span class="font-semibold">
                                 {{ pas.nama_paslon }}
                             </span>
-                            <ProgressBar :value="Math.floor(Math.random() * 100)"></ProgressBar>
+                            <ProgressBar :value="Math.floor(Math.random() * 100)" class="w-full"></ProgressBar>
                         </div>
                         <div class="mb-3">
                             <span class="font-semibold">
                                 Suara Tidak Sah
                             </span>
-                            <ProgressBar :value="Math.floor(Math.random() * 100)" class="red"></ProgressBar>
+                            <ProgressBar :value="Math.floor(Math.random() * 100)" class="red w-full"></ProgressBar>
                         </div>
                     </div>
                 </div>
                 <Divider layout="vertical" class="!hidden md:!flex"></Divider>
-                <div class="flex flex-col md:w-7/12 justify-center">
+                <div class="flex flex-col md:w-7/12 w-full items-center justify-center text-center">
                     <Chart type="pie" :data="chartData" :options="chartOptions" class="w-full md:w-[30rem]" />
                 </div>
             </div>
