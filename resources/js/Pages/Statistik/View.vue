@@ -58,8 +58,11 @@ const filtered_data = ref(kecamatan.value.slice(paginator.value, (paginator.valu
 //     return custom_clr[randomIndex(nm)]
 // }
 
-socket.on('connection', (socket) => {
+socket.on('connection', (sc) => {
     //
+})
+socket.on('get-paslon', (gp) => {
+    console.log(gp)
 })
 
 const filtered = (e) => {

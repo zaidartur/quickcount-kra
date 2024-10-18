@@ -17,9 +17,10 @@ return new class extends Migration
             $table->string('kec_id', '10');
             $table->string('desakel_id');
             $table->string('desakel_name')->nullable();
-            $table->string('vote_sah');
+            $table->text('vote_sah');
             $table->string('vote_tidaksah');
             $table->integer('tahun_vote');
+            $table->integer('vote_tidaksah');
             $table->string('user', '40');
             $table->timestamps();
         });

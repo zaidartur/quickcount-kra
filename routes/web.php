@@ -44,6 +44,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('/suara-masuk')->group(function() {
         Route::get('/', [VoteController::class, 'view'])->name('vote');
         Route::get('/detail/{uid}', [VoteController::class, 'detail_voting'])->name('vote.detail');
+        Route::get('/cek-pwd/{pass}', [VoteController::class, 'check_password'])->name('vote.pwd');
 
         Route::post('/tambah-data', [VoteController::class, 'add_voting'])->name('vote.add');
         Route::post('/hapus-data', [VoteController::class, 'delete_vote'])->name('vote.delete');
