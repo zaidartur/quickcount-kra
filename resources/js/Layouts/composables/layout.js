@@ -1,10 +1,22 @@
 import { computed, reactive, readonly } from 'vue';
+let _darkTheme = false
+// read saved theme from localStorage
+if (localStorage.getItem('theme') !== null) {
+    const theme = localStorage.getItem('theme')
+    _darkTheme = JSON.parse(theme)
+    if (_darkTheme) {
+        document.documentElement.classList.toggle('app-dark')
+    }
+}
+if (localStorage.getItem('toggle') !== null) {
+    //
+}
 
 const layoutConfig = reactive({
     preset: 'Aura',
     primary: 'emerald',
     surface: null,
-    darkTheme: false,
+    darkTheme: _darkTheme,
     menuMode: 'static'
 });
 
@@ -52,6 +64,8 @@ export function useLayout() {
     const executeDarkModeToggle = () => {
         layoutConfig.darkTheme = !layoutConfig.darkTheme;
         document.documentElement.classList.toggle('app-dark');
+        // saving theme to localStorage
+        localStorage.setItem('theme', JSON.stringify(layoutConfig.darkTheme))
     };
 
     const onMenuToggle = () => {
@@ -61,6 +75,7 @@ export function useLayout() {
 
         if (window.innerWidth > 991) {
             layoutState.staticMenuDesktopInactive = !layoutState.staticMenuDesktopInactive;
+
         } else {
             layoutState.staticMenuMobileActive = !layoutState.staticMenuMobileActive;
         }

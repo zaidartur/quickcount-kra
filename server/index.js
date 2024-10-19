@@ -24,7 +24,12 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
     console.log('a user connected');
     socket.on('sending-paslon', (res) => {
+        console.log('sending : ' + res)
         io.emit('get-paslon', res)
+    })
+    socket.on('updating-paslon', (res) => {
+        console.log('updating : ' + res)
+        io.emit('update-paslon', res)
     })
 });
 

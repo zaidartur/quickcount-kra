@@ -27,16 +27,41 @@ class StatistikController extends Controller
     public function view()
     {
         return Inertia::render('Statistik', [
-            'apps'   => $this->setting->get_app(),
-            'status' => session('status'),
-            'paslon' => $this->setting->data_paslon(),
-            'kec'   => $this->data->data_kecamatan(),
-            'desa'  => $this->data->data_desa(),
+            'apps'      => $this->setting->get_app(),
+            'status'    => session('status'),
+            'paslon'    => $this->setting->data_paslon(),
+            'kec'       => $this->data->data_kecamatan(),
+            'desa'      => $this->data->data_desa(),
+            'statkec'   => $this->statistik->statistik_kecamatan(),
         ]);
     }
 
     public function detail_statistik($uid)
     {
         //
+    }
+
+    public function get_statistik_kecamatan()
+    {
+        return $this->statistik->statistik_kecamatan();
+    }
+
+    public function detail_kecamatan(Request $request)
+    {
+        if (!empty($request->kecamatan)) {
+            return $this->statistik->statistik_desa($request->kecamatan);
+        } else {
+            return [];
+        }
+    }
+
+    public function testing()
+    {
+        return $this->statistik->statistik_kecamatan();
+    }
+
+    public function testing_desa($kec)
+    {
+        return $this->statistik->statistik_desa($kec);
     }
 }

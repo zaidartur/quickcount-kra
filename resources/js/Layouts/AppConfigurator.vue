@@ -75,6 +75,36 @@ const surfaces = ref([
     }
 ]);
 
+// load from localStorage
+if (localStorage.getItem('colorPrimary') !== null) {
+    const color = localStorage.getItem('colorPrimary')
+    setPrimary(JSON.parse(color))
+}
+if (localStorage.getItem('colorSurface') !== null) {
+    const color = localStorage.getItem('colorSurface')
+    setSurface(JSON.parse(color))
+}
+if (localStorage.getItem('themePrimary') !== null) {
+    const _theme = localStorage.getItem('themePrimary')
+    updatePreset(JSON.parse(_theme))
+}
+if (localStorage.getItem('themeSurface') !== null) {
+    const _theme = localStorage.getItem('themeSurface')
+    updateSurfacePalette(JSON.parse(_theme))
+}
+
+if (localStorage.getItem('preset') !== null) {
+    const _preset = localStorage.getItem('preset')
+    preset.value = JSON.parse(_preset)
+
+    onPresetChange()
+}
+if (localStorage.getItem('menu') !== null) {
+    const _menu = localStorage.getItem('menu')
+    menuMode.value = JSON.parse(_menu)
+    setMenuMode(JSON.parse(_menu))
+}
+
 function getPresetExt() {
     const color = primaryColors.value.find((c) => c.name === layoutConfig.primary);
 
@@ -167,8 +197,10 @@ function getPresetExt() {
 
 function updateColors(type, color) {
     if (type === 'primary') {
+        localStorage.setItem('colorPrimary', JSON.stringify(color.name))
         setPrimary(color.name);
     } else if (type === 'surface') {
+        localStorage.setItem('colorSurface', JSON.stringify(color.name))
         setSurface(color.name);
     }
 
@@ -177,21 +209,25 @@ function updateColors(type, color) {
 
 function applyTheme(type, color) {
     if (type === 'primary') {
+        localStorage.setItem('themePrimary', JSON.stringify(getPresetExt()))
         updatePreset(getPresetExt());
     } else if (type === 'surface') {
+        localStorage.setItem('themeSurface', JSON.stringify(color.palette))
         updateSurfacePalette(color.palette);
     }
 }
 
 function onPresetChange() {
+    localStorage.setItem('preset', JSON.stringify(preset.value))
     setPreset(preset.value);
     const presetValue = presets[preset.value];
     const surfacePalette = surfaces.value.find((s) => s.name === layoutConfig.surface)?.palette;
-
+    
     $t().preset(presetValue).preset(getPresetExt()).surfacePalette(surfacePalette).use({ useDefaultOptions: true });
 }
 
 function onMenuModeChange() {
+    localStorage.setItem('menu', JSON.stringify(menuMode.value))
     setMenuMode(menuMode.value);
 }
 </script>

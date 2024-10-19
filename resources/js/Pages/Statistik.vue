@@ -8,12 +8,13 @@ const datas = defineProps({
     paslon: Object,
     kec: Object,
     desa: Object,
+    statkec: Object,
 })
 </script>
 
 <template>
     <app-layout :apps="datas.apps">
-        <Statistik :paslon="datas.paslon" :kec="datas.kec" :desa="datas.desa" />
+        <Statistik :paslon="datas.paslon" :kec="datas.kec" :desa="datas.desa" :stat-kec="datas.statkec" />
     </app-layout>
 </template>
     

@@ -13,6 +13,7 @@ import InputGroupAddon from 'primevue/inputgroupaddon';
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import Password from 'primevue/password';
+import InputNumber from 'primevue/inputnumber';
 
 const page  = usePage()
 const message = page.props.flash.message
@@ -68,11 +69,13 @@ const initData = () => {
         })
     }
     if (datas.mydata.length > 0) {
+        calon = []
         if (auth.level === 3) {
             const vote = JSON.parse(datas.mydata[0].vote_sah)
             calon = vote
         }
     } else {
+        calon = []
         datas.paslon.map((ps) => {
             calon.push({
                 uuid: ps.uuid_paslon,
@@ -82,7 +85,7 @@ const initData = () => {
         })
     }
     votingPoint.value = calon
-    console.log(votingPoint.value)
+    // console.log('vote', calon)
 }
 
 initData()
@@ -117,12 +120,16 @@ const form = useForm({
 })
 
 const sendingSocket = (datas) => {
-    console.log('socket', datas)
+    // console.log('socket', datas)
     // uuid, kec, desa, vote(+-)
     // socket.on('connection', (sc) => {
     //     //
     // })
     socket.emit('sending-paslon', datas)
+}
+
+const updateSocket = (datas) => {
+    socket.emit('updating-paslon', datas)
 }
 
 const findKecamatan = (val) => {
@@ -196,41 +203,44 @@ const submitVoteDesa = () => {
     form.user       = auth.uuid
     form.type       = 'new'
 
-    console.log(votingPoint.value)
-    // submitted.value = true
-    // form.post('/suara-masuk/tambah-data', {
-    //     resetOnSuccess: true,
-    //     onSuccess: (res) => {
-    //         const messages = res.props.flash.message
-    //         initData()
-    //         alert_response(messages)
-    //         initVote.map((iv) => {
-    //             const data = {
-    //                 uuid: iv.uuid,
-    //                 kec: kecamatanSelected.value.value,
-    //                 desa: desaSelected.value.value,
-    //                 vote: iv.point,
-    //             }
-    //             sendingSocket(data)
-    //         })
-    //         if (invalid && invalid > 0) {
-    //             const datas = {
-    //                 uuid: 'invalid',
-    //                 kec: kecamatanSelected.value.value,
-    //                 desa: desaSelected.value.value,
-    //                 vote: invalid,
-    //             }
-    //             sendingSocket(datas)
-    //         }
-    //         inputStatus.value = true
-    //         confirmDialog.value = false
-    //         submitted.value = false
-    //     },
-    //     onError: () => {
-    //         toast.add({ severity: 'error', summary: 'Peringatan', detail: 'Input data tidak sesuai', life: 3000 });
-    //         submitted.value = false
-    //     }
-    // })
+    // console.log(votingPoint.value)
+    submitted.value = true
+    form.post('/suara-masuk/tambah-data', {
+        resetOnSuccess: true,
+        onSuccess: (res) => {
+            console.log('res', res)
+            const messages = res.props.flash.message
+            initData()
+            alert_response(messages)
+            initVote.map((iv) => {
+                const datavote = {
+                    uuid: iv.uuid,
+                    kec: kecamatanSelected.value.value,
+                    desa: desaSelected.value.value,
+                    vote: iv.point,
+                }
+                // console.log('data', datavote)
+                sendingSocket(datavote)
+            })
+            if (invalid && invalid > 0) {
+                const datas = {
+                    uuid: 'invalid',
+                    kec: kecamatanSelected.value.value,
+                    desa: desaSelected.value.value,
+                    vote: invalid,
+                }
+                sendingSocket(datas)
+                // console.log('invalid', datas)
+            }
+            inputStatus.value = true
+            confirmDialog.value = false
+            submitted.value = false
+        },
+        onError: () => {
+            toast.add({ severity: 'error', summary: 'Peringatan', detail: 'Input data tidak sesuai', life: 3000 });
+            submitted.value = false
+        }
+    })
 }
 
 const totalVote = () => {
@@ -257,6 +267,7 @@ const checkPwd = async() => {
                 submitted.value = false
                 editLabel.value.label = 'Edit Data'
                 editLabel.value.icon = 'pi pi-pencil'
+                myPassword.value = ''
                 toast.add({ severity: 'error', summary: 'Peringatan', detail: 'Password tidak sesuai', life: 3000 });
             }
         })
@@ -288,14 +299,14 @@ const checkDiffVote = (newest) => {
                 desa: desaSelected.value.value,
                 vote: diff,
             }
-            sendingSocket(data)
+            updateSocket(data)
         }
     })
 }
 
 const checkInvalidDiff = () => {
     const old  = parseInt(datas.mydata[0].vote_tidaksah)
-    const diff = old - parseInt(invalidVote.value)
+    const diff = parseInt(invalidVote.value) - old
     if (diff !== 0) {
         const data = {
             uuid: 'invalid',
@@ -303,7 +314,7 @@ const checkInvalidDiff = () => {
             desa: desaSelected.value.value,
             vote: diff,
         }
-        sendingSocket(data)
+        updateSocket(data)
     }
 }
 
@@ -387,14 +398,14 @@ const alert_response = (rsp) => {
                 <h5 class="md:w-6/12 -mb-0">{{ psl.nama_paslon }}</h5>
                 <IconField class="md:w-10/12">
                     <InputIcon class="pi pi-envelope" />
-                    <InputText type="number" placeholder="Jumlah voting" v-model="votingPoint[idx].point" class="md:w-6/12" :autofocus="idx === 0 && !inputStatus" :disabled="inputStatus" />
+                    <InputNumber placeholder="Jumlah voting" v-model="votingPoint[idx].point" class="md:w-6/12" :autofocus="idx === 0 && !inputStatus" :disabled="inputStatus" />
                 </IconField>
             </div>
             <div class="mb-5">
                 <h5 class="md:w-6/12 -mb-0 text-red-500">Suara Tidak Sah</h5>
                 <IconField class="md:w-10/12">
                     <InputIcon class="pi pi-envelope" />
-                    <InputText type="number" placeholder="Jumlah voting" v-model="invalidVote" class="md:w-6/12" invalid :disabled="inputStatus" />
+                    <InputNumber placeholder="Jumlah voting" v-model="invalidVote" class="md:w-6/12" invalid :disabled="inputStatus" />
                 </IconField>
             </div>
         </div>
@@ -413,14 +424,16 @@ const alert_response = (rsp) => {
                 <span>Anda sudah yakin dengan data yang Anda input?</span
                 >
             </div>
-            <div class="w-full justify-items-center items-center align-middle mt-5 mb-5" v-if="form.type === 'edit' && inputStatus">
-                <label class="w-full ">Masukkan Password Anda untuk konfirmasi :</label>
-                <InputGroup class="w-full justify-items-center">
+            <div class="w-full justify-items-center items-center text-center align-center mt-5 mb-5" v-if="form.type === 'edit' && inputStatus">
+                <i class="pi pi-lock !text-3xl w-full text-center mb-5" />
+                <label class="w-full">Masukkan Password Anda untuk konfirmasi :</label>
+                <Password placeholder="Password Anda" v-model="myPassword" :autofocus="form.type === 'edit' && inputStatus" :toggleMask="true" :feedback="false" fluid class="text-center mt-3 w-[22em]" v-on:keyup.enter="checkPwd" :disabled="submitted" />
+                <!-- <InputGroup class="w-full justify-items-center mt-5">
                     <InputGroupAddon>
                         <i class="pi pi-lock"></i>
                     </InputGroupAddon>
-                    <Password placeholder="Password Anda" v-model="myPassword" autofocus :toggleMask="true" :feedback="false" fluid class="md:w-10/12" :disabled="submitted" />
-                </InputGroup>
+                    <Password placeholder="Password Anda" v-model="myPassword" :autofocus="form.type === 'edit' && inputStatus" :toggleMask="true" :feedback="false" fluid class="md:w-8/12" :disabled="submitted" />
+                </InputGroup> -->
             </div>
             <template #footer>
                 <Button label="Tutup" icon="pi pi-times" text @click="confirmDialog = false" :disabled="submitted" />
