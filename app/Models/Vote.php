@@ -35,6 +35,15 @@ class Vote extends Model
         return $res;
     }
 
+    public function all_data_voting()
+    {
+        return DB::table('data_voting as dv')->leftJoin('data_kecamatan as dk', 'dk.kec_id', '=', 'dv.kec_id')
+                ->leftJoin('data_desa as dd', 'dd.full_id', '=', 'dv.desakel_id')
+                ->leftJoin('users as u', 'u.uuid', '=', 'dv.user')
+                ->select('dv.*', 'dk.kec_name', 'dd.desakel_name', 'dd.desakel_id', 'u.name', 'u.level', 'u.kode')
+                ->get();
+    }
+
     public function save_voting($data)
     {
         return DB::table('data_voting')->insert($data);

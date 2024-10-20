@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, ref } from 'vue';
+import { defineProps, onMounted, ref } from 'vue';
 import { useForm, usePage } from '@inertiajs/vue3';
 import { io } from 'socket.io-client';
 import axios from 'axios';
@@ -25,6 +25,10 @@ const datas = defineProps({
     desa: Object,
     paslon: Object,
     mydata: Object,
+})
+onMounted(() => {
+    isMobile()
+    window.addEventListener('resize', isMobile)
 })
 
 const kecamatan = ref(new Array())
@@ -94,6 +98,7 @@ const desaSelected = ref(new Array())
 const confirmDialog = ref(false)
 const submitted = ref(false)
 const myPassword = ref(null)
+const detectMobile = ref(false)
 const invalidVote = ref(
     datas.mydata.length > 0 ? datas.mydata[0].vote_tidaksah : 0
 )
@@ -185,6 +190,14 @@ const myDesa = () => {
 }
 myKecamatan()
 myDesa()
+
+const isMobile = () => {
+    let check = false;
+    (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4))) check = true;})(navigator.userAgent||navigator.vendor||window.opera);
+    // console.log('isMobile', check)
+    detectMobile.value = check;
+    return check;
+}
 
 const submitVoteDialog = () => {
     form.type = 'new'
@@ -372,7 +385,8 @@ const alert_response = (rsp) => {
     <Head title="Suara Masuk" />
 
     <div>
-        <h3 class="mb-5">Input suara masuk {{ auth.level === 2 ? 'Kecamatan' : 'Desa/Kel.' }} {{ auth.level === 2 ? findKecamatan(auth.kode) : (auth.level === 3 ? (findDesa(auth.kode)+', '+findKecamatan(auth.kode.substr(2,2))) : '') }}</h3>
+        <h3 class="mb-5">Input Suara Masuk <span v-if="!detectMobile">{{ auth.level === 2 ? 'Kecamatan' : 'Desa/Kel.' }} {{ auth.level === 2 ? findKecamatan(auth.kode) : (auth.level === 3 ? (findDesa(auth.kode)+', '+findKecamatan(auth.kode.substr(2,2))) : '') }}</span></h3>
+        <h3 v-if="detectMobile" class="-mt-7">{{ auth.level === 2 ? 'Kecamatan' : 'Desa/Kel.' }} {{ auth.level === 2 ? findKecamatan(auth.kode) : (auth.level === 3 ? (findDesa(auth.kode)+', '+findKecamatan(auth.kode.substr(2,2))) : '') }}</h3>
 
         <!-- <div class="flex flex-col md:flex-row md:w-8/12 w-full mb-5" v-if="auth.level === 7">
             <label for="kecamatan" class="md:w-5/12">Kecamatan</label>
@@ -393,28 +407,54 @@ const alert_response = (rsp) => {
             </InputGroup>
         </div> -->
 
-        <div v-if="auth.level === 3" class="w-full gap-6">
-            <div class="mb-5" v-for="(psl, idx) in paslons">
-                <h5 class="md:w-6/12 -mb-0">{{ psl.nama_paslon }}</h5>
-                <IconField class="md:w-10/12">
-                    <InputIcon class="pi pi-envelope" />
-                    <InputNumber placeholder="Jumlah voting" v-model="votingPoint[idx].point" class="md:w-6/12" :autofocus="idx === 0 && !inputStatus" :disabled="inputStatus" />
-                </IconField>
+        <div v-if="auth.level === 3 && !detectMobile">
+            <div class="w-full gap-6">
+                <div class="mb-5" v-for="(psl, idx) in paslons">
+                    <h5 class="md:w-6/12 -mb-0">{{ psl.nama_paslon }}</h5>
+                    <IconField class="md:w-10/12">
+                        <InputIcon class="pi pi-envelope" />
+                        <InputNumber placeholder="Jumlah voting" v-model="votingPoint[idx].point" class="md:w-6/12" :autofocus="idx === 0 && !inputStatus" :disabled="inputStatus" />
+                    </IconField>
+                </div>
+                <div class="mb-5">
+                    <h5 class="md:w-6/12 -mb-0 text-red-500">Suara Tidak Sah</h5>
+                    <IconField class="md:w-10/12">
+                        <InputIcon class="pi pi-envelope" />
+                        <InputNumber placeholder="Jumlah voting" v-model="invalidVote" class="md:w-6/12" invalid :disabled="inputStatus" />
+                    </IconField>
+                </div>
             </div>
-            <div class="mb-5">
-                <h5 class="md:w-6/12 -mb-0 text-red-500">Suara Tidak Sah</h5>
-                <IconField class="md:w-10/12">
-                    <InputIcon class="pi pi-envelope" />
-                    <InputNumber placeholder="Jumlah voting" v-model="invalidVote" class="md:w-6/12" invalid :disabled="inputStatus" />
-                </IconField>
+            <div class="">
+                <Button label="Simpan" icon="pi pi-save" @click="submitVoteDialog" :disabled="submitted" v-if="datas.mydata.length < 1" />
+                <!-- <Button :label="editLabel.label" :icon="editLabel.icon" @click="updateVoteDialog" :disabled="submitted" v-if="datas.mydata.length > 0" /> -->
+                    <Button label="Edit Data" icon="pi pi-pencil" @click="updateVoteDialog('edit')" :disabled="submitted" v-if="datas.mydata.length > 0 && form.type !== 'update'" />
+                        <Button label="Update Data" icon="pi pi-save" @click="updateVoteDialog('update')" :disabled="submitted" v-if="datas.mydata.length > 0 && form.type === 'update'" />
+                <Button label="Batalkan" icon="pi pi-times" class="ml-5" severity="warn" @click="cancelUpdateDesa" :disabled="submitted" v-if="(datas.mydata.length > 0 && !inputStatus)" />
             </div>
         </div>
-        <div class="">
-            <Button label="Simpan" icon="pi pi-save" @click="submitVoteDialog" :disabled="submitted" v-if="datas.mydata.length < 1" />
-            <!-- <Button :label="editLabel.label" :icon="editLabel.icon" @click="updateVoteDialog" :disabled="submitted" v-if="datas.mydata.length > 0" /> -->
-                <Button label="Edit Data" icon="pi pi-pencil" @click="updateVoteDialog('edit')" :disabled="submitted" v-if="datas.mydata.length > 0 && form.type !== 'update'" />
-                    <Button label="Update Data" icon="pi pi-save" @click="updateVoteDialog('update')" :disabled="submitted" v-if="datas.mydata.length > 0 && form.type === 'update'" />
-            <Button label="Batalkan" icon="pi pi-times" class="ml-5" severity="warn" outlined @click="cancelUpdateDesa" :disabled="submitted" v-if="(datas.mydata.length > 0 && !inputStatus)" />
+        <div v-if="auth.level === 3 && detectMobile">
+            <div class="w-full gap-6">
+                <div class="mb-5" v-for="(psl, idx) in paslons">
+                    <h5 class="md:w-6/12 -mb-0">{{ psl.nama_paslon }}</h5>
+                    <IconField class="md:w-10/12">
+                        <InputIcon class="pi pi-envelope" />
+                        <InputNumber placeholder="Jumlah voting" v-model="votingPoint[idx].point" fluid class="md:w-6/12" :autofocus="idx === 0 && !inputStatus" inputStyle="height:55px; font-size: 24px; font-weight: bold;" :disabled="inputStatus" />
+                    </IconField>
+                </div>
+                <div class="mb-5">
+                    <h5 class="md:w-6/12 -mb-0 text-red-500">Suara Tidak Sah</h5>
+                    <IconField class="md:w-10/12">
+                        <InputIcon class="pi pi-envelope" />
+                        <InputNumber placeholder="Jumlah voting" v-model="invalidVote" fluid class="md:w-6/12" invalid inputStyle="height:55px; font-size: 24px; font-weight: bold;" :disabled="inputStatus" />
+                    </IconField>
+                </div>
+            </div>
+            <div class="mt-10 flex flex-row w-full justify-between py-3">
+                <Button label="Simpan" icon="pi pi-save" @click="submitVoteDialog" :disabled="submitted" v-if="datas.mydata.length < 1" size="large" class="w-5/12" />
+                <Button label="Edit Data" icon="pi pi-pencil" @click="updateVoteDialog('edit')" :disabled="submitted" v-if="datas.mydata.length > 0 && form.type !== 'update'" size="large" class="w-5/12" />
+                <Button label="Update Data" icon="pi pi-save" @click="updateVoteDialog('update')" :disabled="submitted" v-if="datas.mydata.length > 0 && form.type === 'update'" size="large" class="w-5/12" />
+                <Button label="Batalkan" icon="pi pi-times" class="w-5/12" severity="danger" @click="cancelUpdateDesa" :disabled="submitted" v-if="(datas.mydata.length > 0 && !inputStatus)" size="large" />
+            </div>
         </div>
 
 

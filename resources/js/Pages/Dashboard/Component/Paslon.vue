@@ -1,0 +1,151 @@
+<script setup>
+import { defineProps, ref } from 'vue';
+import logo from '@/Assets/Lambang_Kabupaten_Karanganyar-grayscale-84px.png';
+
+const test = ref([
+    {a: 'Oke'},{a: 'Yes'},{a: 'No'}
+])
+const datas = defineProps({
+    paslon: Object,
+    kec: Object,
+    desa: Object,
+    suara: Object,
+})
+
+const dataPaslon = ref(datas.paslon)
+// console.log(dataPaslon.value)
+</script>
+
+<template>
+    <div class="mb-10">
+        <h2 class="w-full text-center py-5">
+            Data Suara Masuk <br>
+            1.000 Suara
+        </h2>
+
+        <div :class="(dataPaslon.length < 3 || dataPaslon.length === 4 ) ? 'grid grid-cols-2' : 'grid grid-cols-3'" class="gap-12 w-full justify-evenly">
+            <div class="box" v-for="dp in dataPaslon">
+                <div class="box-icon">
+                    <!-- <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"></path></svg> -->
+                    <img :src="logo" style="max-width: 40px">
+                    </div>
+                <div class="box-label">200 Suara (25%)</div>
+                <div class="box-title">{{ dp.no_urut }} - {{ dp.nama_paslon }}</div>
+                <div class="box-image">
+                    <img :src="dp.foto_paslon" alt="profile">
+                </div>
+                <!-- <div class="studio-button">
+                    <div class="studio-button-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>
+                    </div>
+                    <div class="studio-button-label">
+                    Open in Studio
+                    </div>
+                </div> -->
+            </div>
+        </div>
+    </div>
+</template>
+
+<style lang="scss">
+.box {
+    background: white;
+    border-radius: 20px;
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    position: relative;
+    //   width: 33.2em;
+}
+
+.box-icon {
+    display: grid;
+    place-items: center;
+}
+
+.box-label {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    padding-left: 16px;
+    font-size: 16px;
+    letter-spacing: 0.125em;
+}
+
+.box-title {
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-size: 20px;
+    padding-top: 16px;
+}
+
+.box-image {
+    // width: 400px;
+    // height: 400px;
+    border-radius: 18px 0 18px 0;
+    overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+}
+
+.box-three {
+    // width: 266px;
+    // height: 266px;
+    width: 406px;
+    height: 406px;
+}
+
+.box-five {
+    width: 376px;
+    height: 376px;
+}
+
+.studio-button {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    background: #68009d;
+    color: white;
+    padding: 8px 10px;
+    border-radius: 50px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    transition: 0.35s ease all;
+    overflow: hidden;
+    max-width: 22px; /* icon size */
+}
+
+.studio-button-icon {
+    position: relative;
+    top: 1px;
+}
+
+.studio-button-label {
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding: 0 8px;
+    opacity: 0;
+    transform: translateX(10px);
+    transition: 0.25s ease all;
+}
+
+.box:hover {
+    .studio-button {
+        max-width: 100%;
+    }
+    .studio-button-label {
+        opacity: 1;
+        transform: translateX(0);
+        transition: 0.25s 0.1s ease-in opacity, 0.15s 0.1s cubic-bezier(.175, .885, .32, 1.275) transform;
+    }
+}
+
+</style>

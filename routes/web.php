@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DataController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingController;
@@ -23,19 +24,13 @@ Route::get('/', function () {
     return redirect()->route('dashboard');
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-Route::get('/statistik', function () {
-    return Inertia::render('Statistik');
-})->middleware(['auth', 'verified'])->name('statistik');
-
-Route::get('/setting', function () {
-    return Inertia::render('Setting');
-})->middleware(['auth', 'verified'])->name('setting');
+// Route::get('/dashboard', function () {
+//     return Inertia::render('Dashboard');
+// })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'view'])->name('dashboard');
+
     Route::prefix('/statistik')->group(function() {
         Route::get('/', [StatistikController::class, 'view'])->name('stat');
         Route::get('/detail/{uid}', [StatistikController::class, 'detail_statistik'])->name('stat.detail');

@@ -1,11 +1,20 @@
 <script setup>
-    import AppLayout from "@/Layouts/AppLayout.vue";
-    import Dashboard  from "@/Pages/Dashboard/View.vue";
+import { defineProps } from "vue";
+import AppLayout from "@/Layouts/AppLayout.vue";
+import Dashboard  from "@/Pages/Dashboard/View.vue";
+
+const data = defineProps({
+    apps: Object,
+    paslon: Object,
+    kec: Object,
+    desa: Object,
+    alldata: Object,
+})
 </script>
 
 <template>
-    <app-layout>
-        <Dashboard />
+    <app-layout :apps="data.apps">
+        <Dashboard :apps="data.apps" :paslon="data.paslon" :suara="data.alldata" :kec="data.kec" :desa="data.desa"/>
     </app-layout>
 </template>
     

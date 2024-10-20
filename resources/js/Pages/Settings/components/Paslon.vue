@@ -178,6 +178,7 @@ const onFileSelect = (event) => {
         progressSpinner.value = false
     }
 }
+console.log(window.location.pathname)
 
 const save_paslon = () => {
     submitted.value = true
@@ -266,13 +267,13 @@ const alert_response = (rsp) => {
                         <template #header>
                             <img alt="user header" :src="dp?.foto_paslon" />
                         </template>
-                        <template #title>{{ dp?.no_urut }}</template>
-                        <template #subtitle>{{ dp?.nama_paslon }}</template>
+                        <template #title>
+                            <div class="w-full text-center">{{ dp?.no_urut }}</div>
+                        </template>
                         <template #content>
-                            <p class="m-0">
-                                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Inventore sed consequuntur error repudiandae numquam deserunt quisquam repellat libero asperiores earum nam nobis, culpa ratione quam perferendis esse, cupiditate neque
-                                quas!
-                            </p>
+                            <div class="w-full text-center mb-20">
+                                <h2>{{ dp?.nama_paslon }}</h2>
+                            </div>
                         </template>
                         <template #footer>
                             <div class="flex gap-4 mt-1">
@@ -283,6 +284,7 @@ const alert_response = (rsp) => {
                     </Card>
                 </div>
             </div>
+
         </div>
 
         <Dialog v-model:visible="paslonDialog" :style="{ width: '450px' }" header="Tambah Data" :modal="true" :closable="false">
@@ -350,3 +352,40 @@ const alert_response = (rsp) => {
         </Dialog>
     </div>
 </template>
+
+<style scoped lang="scss">
+    .paslon_card {
+        height: 379px;
+        width: 300px;
+        background: grey;
+        border-radius: 10px;
+        transition: background 0.8s;
+        overflow: hidden;
+        background: black;
+        box-shadow: 0 70px 63px -60px #000000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+    }
+
+    .card_image {
+        // background: url('https://i.pinimg.com/736x/8f/a0/51/8fa051251f5ac2d0b756027089fbffde--terry-o-neill-al-pacino.jpg') center center no-repeat;
+        background-size: 300px;
+
+        &:hover {
+            background: url('https://i.pinimg.com/736x/8f/a0/51/8fa051251f5ac2d0b756027089fbffde--terry-o-neill-al-pacino.jpg') left center no-repeat;
+            // background: left center no-repeat;
+            background-size: 600px;
+        }
+
+        h2 {
+            opacity: 1;
+        }
+
+        .fa {
+            opacity: 1;
+        }
+
+    }
+</style>

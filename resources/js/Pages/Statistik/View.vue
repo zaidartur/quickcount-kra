@@ -12,10 +12,11 @@ import Toolbar from 'primevue/toolbar';
 import MeterGroup from 'primevue/metergroup';
 import Card from 'primevue/card';
 
-// onMounted(() => {
-//     chartData.value = setChartData();
-//     chartOptions.value = setChartOptions();
-// })
+onMounted(() => {
+    // chartData.value = setChartData();
+    // chartOptions.value = setChartOptions();
+    window.addEventListener('resize', onResize)
+})
 
 const page  = usePage()
 const message = page.props.flash.message
@@ -81,7 +82,8 @@ const initData = () => {
 initData() 
 const paginator = ref(0)
 const index = ref(0)
-const wdth = window.innerWidth
+const sideBar = 280
+const wdth = ref(window.innerWidth - sideBar)
 const filtered_data = ref(dataProgress.value.slice(paginator.value, (paginator.value + 8)))
 const clr = ['#eab308', '#8b5cf6', '#3b82f6', '#f97316', '#f59e0b', '#10b981', '#14b8a6', '#84cc16']
 const clrLabel = ['yellow', 'violet', 'blue', 'orange', 'amber', 'emerald', 'teal', 'lime']
@@ -194,12 +196,16 @@ socket.on('update-paslon', (gp) => {
     console.log('update', gp)
 })
 
+const onResize = () => {
+    wdth.value = window.innerWidth
+    // wdth.value = (window.innerWidth - sideBar)
+}
+
 const filtered = (e) => {
     paginator.value = e.first
     filtered_data.value = dataProgress.value.slice(paginator.value, (paginator.value + 8))
 }
 
-console.log(filtered_data.value)
 function formatNumber(value) {
     if (value) return value.toLocaleString({ style: 'number' })
     return
@@ -332,8 +338,7 @@ const setChartOptions = () => {
         <Toolbar class="mb-6">
             <template #start>
                 <h5 class="m-3">
-                    Total Suara Masuk : <span class="text-3xl">{{ formatNumber(totalSeluruhSuara) }}</span>
-                    {{ wdth }}
+                    Total Suara Masuk : <span class="text-3xl">{{ formatNumber(totalSeluruhSuara) }}</span> {{ wdth }}
                 </h5>
             </template>
 
@@ -344,7 +349,7 @@ const setChartOptions = () => {
             </template>
         </Toolbar>
         <div class="grid grid-cols-12 gap-8">
-            <div class="col-span-12 md:col-span-6 lg:col-span-4 xl:col-span-3 cursor-pointer" v-for="(camat, c) in filtered_data">
+            <div class="col-span-12 md:col-span-6 lg:col-span-4 cursor-pointer" :class="wdth >= 1920 ? 'xl:col-span-2' : 'xl:col-span-3'" v-for="(camat, c) in dataProgress">
                 <div class="card mb-0" :id="'card_'+camat.id" @mouseover="mouseOnCard(camat.id)" @mouseout="mouseOutCard(camat.id)" @click="_detail(camat)">
                 <!-- <div class="card mb-0 col-span-12 md:col-span-6 lg:col-span-4 xl:col-span-4 cursor-pointer" v-for="camat in filtered_data"> -->
                     <div class="flex justify-between mb-4">
@@ -373,7 +378,7 @@ const setChartOptions = () => {
                 </div>
             </div>
         </div>
-        <div class="w-full mt-5">
+        <!-- <div class="w-full mt-5">
             <Paginator 
                 v-model="kecamatan" 
                 :rows="8" 
@@ -382,7 +387,7 @@ const setChartOptions = () => {
                 currentPageReportTemplate="Menampilkan data ke {first} sampai {last} dari {totalRecords} Kecamatan" 
                 @page="filtered($event)"
             />
-        </div>
+        </div> -->
 
         <Dialog v-model:visible="detailDialog" maximizable modal :header="headerDetail" :style="{ width: '75rem' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
             <div class="flex flex-col md:flex-row md:w-12/12 mb-5">
