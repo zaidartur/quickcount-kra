@@ -16,5 +16,5 @@ const datas = defineProps({
     <Head title="Dashboard" />
 
     <Paslon :paslon="datas.paslon" :kec="datas.kec" :desa="datas.desa" :suara="datas.suara" />
-    <Grafik />
+    <Grafik :paslon="datas.paslon" :kec="datas.kec" :desa="datas.desa" :suara="datas.suara" />
 </template>
