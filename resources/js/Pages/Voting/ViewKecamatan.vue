@@ -1,18 +1,17 @@
 <script setup>
-import { defineProps, ref } from 'vue';
+import { defineProps, ref, onBeforeMount } from 'vue';
 import { useForm, usePage } from '@inertiajs/vue3';
 import { io } from 'socket.io-client';
 import axios from 'axios';
 import { useToast } from 'primevue/usetoast';
-import InputIcon from 'primevue/inputicon';
-import InputText from 'primevue/inputtext';
-import IconField from 'primevue/iconfield';
 import Select from 'primevue/select';
-import InputGroup from 'primevue/inputgroup';
-import InputGroupAddon from 'primevue/inputgroupaddon';
+import Message from 'primevue/message';
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import Password from 'primevue/password';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import InputNumber from 'primevue/inputnumber';
 
 const page  = usePage()
 const message = page.props.flash.message
@@ -29,7 +28,11 @@ const datas = defineProps({
 const kecamatan = ref(new Array())
 const desas = ref(new Array())
 const paslons = ref(new Array())
+const voteData = ref(new Array())
 const votingPoint = ref(new Array())
+const voteTotal = ref(0)
+const expandedRows = ref([])
+const dataPaslon = ref(new Array())
 
 const socket = io('http://localhost:3000', {
     withCredentials: true,
@@ -37,8 +40,10 @@ const socket = io('http://localhost:3000', {
 
 const initData = () => {
     kecamatan.value = []
+    voteData.value = []
     paslons.value = []
     desas.value = []
+    dataPaslon.value = []
     let calon = []
 
     if (datas.kec) {
@@ -57,38 +62,32 @@ const initData = () => {
             })
         })
     }
+    if (datas.mydata) {
+        datas.mydata.map((my) => {
+            voteData.value.push(my)
+        })
+    }
     if (datas.paslon) {
-        datas.paslon.map((ps, p) => {
-            paslons.value.push(ps)
-            calon.push({
-                uuid: ps.uuid_paslon,
-                name: ps.nama_paslon,
-                point: 0,
+        datas.paslon.map((dp) => {
+            paslons.value.push(dp)
+            dataPaslon.value.push({
+                uuid: dp.uuid_paslon,
+                name: dp.nama_paslon,
+                point: 0
             })
         })
     }
-    if (datas.mydata.length > 0) {
-        if (auth.level === 3) {
-            const vote = JSON.parse(datas.mydata[0].vote_sah)
-            calon = vote
-        }
-    } else {
-        datas.paslon.map((ps) => {
-            calon.push({
-                uuid: ps.uuid_paslon,
-                name: ps.nama_paslon,
-                point: 0,
-            })
-        })
-    }
-    votingPoint.value = calon
+    // console.log(dataPaslon.value)
 }
 
 initData()
-const kecamatanSelected = ref(new Array())
-const desaSelected = ref(new Array())
+const isDesa = ref()
+const desaSelected = ref()
 const confirmDialog = ref(false)
+const addDialog = ref(false)
 const submitted = ref(false)
+const headerTitle = ref('Tambah Data')
+const errorDesa = ref('')
 const myPassword = ref(null)
 const invalidVote = ref(
     datas.mydata.length > 0 ? datas.mydata[0].vote_tidaksah : 0
@@ -108,7 +107,7 @@ const form = useForm({
     desa: null,
     desaName: null,
     voteValid: null,
-    voteInvalid: null,
+    voteInvalid: 0,
     totalVote: null,
     tahun: null,
     user: null,
@@ -117,11 +116,15 @@ const form = useForm({
 
 const sendingSocket = (datas) => {
     console.log('socket', datas)
-    // uuid, kec, desa, vote(+-)
-    // socket.on('connection', (sc) => {
-    //     //
-    // })
     socket.emit('sending-paslon', datas)
+}
+
+function expandAll() {
+    expandedRows.value = voteData.value.reduce((acc, p) => (acc[p.id] = true) && acc, {});
+}
+
+function collapseAll() {
+    expandedRows.value = null;
 }
 
 const findKecamatan = (val) => {
@@ -144,30 +147,30 @@ const findDesa = (val) => {
     return res
 }
 
-const myKecamatan = () => {
-    let isKec = null
-    if (auth.level === 2) {
-        isKec = auth.kode
-    } else if (auth.level === 3) {
-        isKec = auth.kode.substr(2,2)
-    }
+// const myKecamatan = () => {
+//     let isKec = null
+//     if (auth.level === 2) {
+//         isKec = auth.kode
+//     } else if (auth.level === 3) {
+//         isKec = auth.kode.substr(2,2)
+//     }
 
-    let res = []
-    kecamatan.value.map((mk) => {
-        if (mk.value === isKec) {
-            kecamatanSelected.value = {
-                label: mk.label,
-                value: mk.value,
-            }
-        }
-    })
-}
+//     let res = []
+//     kecamatan.value.map((mk) => {
+//         if (mk.value === isKec) {
+//             kecamatanSelected.value = {
+//                 label: mk.label,
+//                 value: mk.value,
+//             }
+//         }
+//     })
+// }
 const myDesa = () => {
-    desaSelected.value = {}
+    isDesa.value = {}
     if (auth.level === 3) {
         desas.value.map((ds) => {
             if (ds.value === auth.kode) {
-                desaSelected.value = {
+                isDesa.value = {
                     label: ds.label,
                     value: ds.value
                 }
@@ -175,26 +178,67 @@ const myDesa = () => {
         })
     }
 }
-myKecamatan()
+// myKecamatan()
 myDesa()
 
-const submitVoteDialog = () => {
-    form.type = 'new'
-    confirmDialog.value = true
+const getTotal = () => {
+    voteTotal.value = 0
+    voteData.value.map((ps) => {
+        const add = voteTotal.value + parseInt(ps.total)
+        voteTotal.value = add
+    })
+}
+getTotal()
+
+const new_data = () => {
+    form.reset()
+    headerTitle.value = 'Tambah Data'
+    desaSelected.value = []
+    form.voteInvalid = 0
+    desa_existing()
+    addDialog.value = true
 }
 
-const submitVoteDesa = () => {
-    const initVote  = votingPoint.value
-    form.kec        = auth.kode.substr(2,2)
-    form.desa       = auth.kode
+const desa_existing = () => {
+    if (voteData.value.length > 0) {
+        const _uid = []
+        voteData.value.map((vd) => {
+            _uid.push(vd.desakel_id)
+        })
+        
+        const filter = desas.value.filter((ds) => {
+            if (!_uid.includes(ds.value)) {
+                return ds
+            }
+        })
+        desas.value = filter
+    }
+}
+
+const checkDesa = () => {
+    if (desaSelected.value) {
+        errorDesa.value = ''
+        return true
+    } else {
+        errorDesa.value = 'Mohon untuk memilih desa/kelurahan terlebih dahulu'
+        return false
+    }
+}
+
+const submit = () => {
+    const initVote  = dataPaslon.value
+    const isInvalid = form.voteInvalid
+    form.kec        = auth.kode
+    form.desa       = desaSelected.value.value
     form.desaName   = desaSelected.value.label
-    form.voteValid  = JSON.stringify(votingPoint.value)
-    form.voteInvalid = invalidVote.value
+    form.voteValid  = JSON.stringify(dataPaslon.value)
+    // form.voteInvalid = invalidVote.value
     form.totalVote  = totalVote()
     form.user       = auth.uuid
     form.type       = 'new'
 
-    // console.log(form)
+    console.log(form)
+    confirmDialog.value = false
     submitted.value = true
     form.post('/suara-masuk/tambah-data', {
         resetOnSuccess: true,
@@ -202,17 +246,29 @@ const submitVoteDesa = () => {
             const messages = res.props.flash.message
             initData()
             alert_response(messages)
-            initVote.map((iv) => {
-                const data = {
-                    uuid: iv.uuid,
-                    kec: kecamatanSelected.value.value,
-                    desa: desaSelected.value.value,
-                    vote: iv.point,
+            if (messages.status === 'success') {
+                initVote.map((iv) => {
+                    const data = {
+                        uuid: iv.uuid,
+                        kec: auth.kode,
+                        desa: desaSelected.value.value,
+                        vote: iv.point,
+                    }
+                    sendingSocket(data)
+                })
+                if (isInvalid > 0) {
+                    const data = {
+                        uuid: 'invalid',
+                        kec: auth.kode,
+                        desa: desaSelected.value.value,
+                        vote: isInvalid,
+                    }
+                    sendingSocket(data)
                 }
-                sendingSocket(data)
-            })
-            inputStatus.value = true
-            confirmDialog.value = false
+                getTotal()
+                addDialog.value = false
+            }
+
             submitted.value = false
         },
         onError: () => {
@@ -222,15 +278,24 @@ const submitVoteDesa = () => {
     })
 }
 
-const totalVote = () => {
-    let point = 0
-    votingPoint.value.map((vp) => {
-        point = point+parseInt(vp.point)
-    })
-    return point
+const submitVoteDialog = () => {
+    form.type = 'new'
+    if (checkDesa() && totalVote() > 0) {
+        confirmDialog.value = true
+    } else {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Mohon untuk mengisi semua field', life: 3000 });
+    }
 }
 
-const checkPwd = async() => {
+const totalVote = () => {
+    let point = 0
+    dataPaslon.value.map((vp) => {
+        point = point+parseInt(vp.point)
+    })
+    return (point + parseInt(form.voteInvalid))
+}
+
+const checkPwd = async(datas) => {
     submitted.value = true
     if (myPassword.value) {
         await axios.get('/suara-masuk/cek-pwd/' + btoa(myPassword.value)).then((res) => {
@@ -282,7 +347,7 @@ const checkDiffVote = (newest) => {
     })
 }
 
-const updateVoteDialog = (type) => {
+const updateVoteDialog = (data,type) => {
     form.type = type
     myPassword.value = null
     confirmDialog.value = true
@@ -320,70 +385,94 @@ const alert_response = (rsp) => {
     <div>
         <h3 class="mb-5">Input suara masuk {{ auth.level === 2 ? 'Kecamatan' : 'Desa/Kel.' }} {{ auth.level === 2 ? findKecamatan(auth.kode) : (auth.level === 3 ? (findDesa(auth.kode)+', '+findKecamatan(auth.kode.substr(2,2))) : '') }}</h3>
 
-        <!-- <div class="flex flex-col md:flex-row md:w-8/12 w-full mb-5" v-if="auth.level === 7">
-            <label for="kecamatan" class="md:w-5/12">Kecamatan</label>
-            <InputGroup>
-                <InputGroupAddon>
-                    <i class="pi pi-map-marker"></i>
-                </InputGroupAddon>
-                <Select id="kecamatan" v-model="kecamatanSelected" :options="kecamatan" optionLabel="label" placeholder="Pilih Kecamatan" required="true" fluid :disabled="true"></Select>
-            </InputGroup>
-        </div>
-        <div class="flex flex-col md:flex-row md:w-8/12 w-full mb-5" v-if="auth.level === 7">
-            <label for="desa" class="md:w-5/12">Desa/Kelurahan</label>
-            <InputGroup>
-                <InputGroupAddon>
-                    <i class="pi pi-map-marker"></i>
-                </InputGroupAddon>
-                <Select id="desa" v-model="desaSelected" :options="desas" optionLabel="label" placeholder="Pilih Desa" required="true" fluid :disabled="true"></Select>
-            </InputGroup>
+        <!-- <div class="mb-5">
+            <Button label="Tambah Data" icon="pi pi-plus-circle" @click="submitVoteDialog" />
         </div> -->
-
-        <div v-if="auth.level === 3" class="w-full gap-6">
-            <div class="mb-5" v-for="(psl, idx) in paslons">
-                <h5 class="md:w-6/12 -mb-0">{{ psl.nama_paslon }}</h5>
-                <IconField class="md:w-10/12">
-                    <InputIcon class="pi pi-envelope" />
-                    <InputText type="number" placeholder="Jumlah voting" v-model="votingPoint[idx].point" class="md:w-6/12" :autofocus="idx === 0 && !inputStatus" :disabled="inputStatus" />
-                </IconField>
-            </div>
-            <div class="mb-5">
-                <h5 class="md:w-6/12 -mb-0 text-red-500">Suara Tidak Sah</h5>
-                <IconField class="md:w-10/12">
-                    <InputIcon class="pi pi-envelope" />
-                    <InputText type="number" placeholder="Jumlah voting" v-model="invalidVote" class="md:w-6/12" invalid :disabled="inputStatus" />
-                </IconField>
-            </div>
+        <div class="card">
+            <div class="font-semibold text-xl mb-4">Data yang sudah ter-input {{ voteTotal }}</div>
+            <DataTable v-model:expandedRows="expandedRows" :value="voteData" dataKey="id" tableStyle="min-width: 60rem">
+                <template #header>
+                    <div class="flex flex-wrap justify-start gap-2">
+                        <Button label="Tambah Data" icon="pi pi-plus-circle" @click="new_data" />
+                    </div>
+                    <div class="flex flex-wrap justify-end gap-2">
+                        <Button text icon="pi pi-plus" label="Buka Semua" @click="expandAll" />
+                        <Button text icon="pi pi-minus" label="Tutup Semua" @click="collapseAll" />
+                    </div>
+                </template>
+                <Column expander style="width: 5rem" />
+                <Column field="desakel_name" header="Nama Desa/Kel"></Column>
+                <Column field="" header="Suara Sah">
+                    <template #body="slotProps">
+                        {{ (slotProps.data.total - parseInt(slotProps.data.invalid)) }}
+                    </template>
+                </Column>
+                <Column field="invalid" header="Suara Tidak Sah"></Column>
+                <Column field="total" header="Total">
+                    <template #body="slotProps">
+                        <b>{{ (slotProps.data.total) }}</b>
+                    </template>
+                </Column>
+                <Column :exportable="false" style="min-width: 3rem">
+                    <template #body="slotProps">
+                        <Button icon="pi pi-pencil" outlined rounded v-tooltip.bottom="'Edit Data ' + slotProps.data.desakel_name" class="mr-2" @click="updateVoteDialog(slotProps.data, 'edit')" />
+                    </template>
+                </Column>
+                <template #expansion="slotProps">
+                    <div class="p-4">
+                        <h5>Detail Desa/Kelurahan {{ slotProps.data.desakel_name }}</h5>
+                        <DataTable :value="slotProps.data.valid">
+                            <Column field="name" header="Paslon"></Column>
+                            <Column field="point" header="Jumlah Suara"></Column>
+                        </DataTable>
+                    </div>
+                </template>
+            </DataTable>
         </div>
-        <div class="">
-            <Button label="Simpan" icon="pi pi-save" @click="submitVoteDialog" :disabled="submitted" v-if="datas.mydata.length < 1" />
-            <!-- <Button :label="editLabel.label" :icon="editLabel.icon" @click="updateVoteDialog" :disabled="submitted" v-if="datas.mydata.length > 0" /> -->
-                <Button label="Edit Data" icon="pi pi-pencil" @click="updateVoteDialog('edit')" :disabled="submitted" v-if="datas.mydata.length > 0 && form.type !== 'update'" />
-                    <Button label="Update Data" icon="pi pi-save" @click="updateVoteDialog('update')" :disabled="submitted" v-if="datas.mydata.length > 0 && form.type === 'update'" />
-            <Button label="Batalkan" icon="pi pi-times" class="ml-5" severity="warn" outlined @click="cancelUpdateDesa" :disabled="submitted" v-if="(datas.mydata.length > 0 && !inputStatus)" />
-        </div>
-
 
         <Dialog v-model:visible="confirmDialog" :style="{ width: '450px' }" header="Konfirmasi" :modal="true" :closable="false" >
-            <div class="flex items-center gap-4" v-if="form.type === 'new' || (form.type === 'update' || !inputStatus)">
+            <div class="flex items-center gap-4" v-if="form.type === 'new' || (form.type === 'update')">
                 <i class="pi pi-exclamation-triangle !text-3xl" />
                 <span>Anda sudah yakin dengan data yang Anda input?</span
                 >
             </div>
-            <div class="w-full justify-items-center items-center align-middle mt-5 mb-5" v-if="form.type === 'edit' && inputStatus">
-                <label class="w-full ">Masukkan Password Anda untuk konfirmasi :</label>
-                <InputGroup class="w-full justify-items-center">
-                    <InputGroupAddon>
-                        <i class="pi pi-lock"></i>
-                    </InputGroupAddon>
-                    <Password placeholder="Password Anda" v-model="myPassword" autofocus :toggleMask="true" :feedback="false" fluid class="md:w-10/12" :disabled="submitted" />
-                </InputGroup>
+            <div class="w-full justify-items-center items-center align-middle mt-5 mb-5" v-if="form.type === 'edit'">
+                <i class="pi pi-lock !text-3xl w-full text-center mb-5" />
+                <label class="w-full">Masukkan Password Anda untuk konfirmasi :</label>
+                <Password placeholder="Password Anda" v-model="myPassword" :autofocus="form.type === 'edit'" :toggleMask="true" :feedback="false" fluid class="text-center mt-3 w-[22em]" v-on:keyup.enter="checkPwd" :disabled="submitted" />
             </div>
             <template #footer>
                 <Button label="Tutup" icon="pi pi-times" text @click="confirmDialog = false" :disabled="submitted" />
-                <Button label="Ya, Konfirmasi" icon="pi pi-check" @click="submitVoteDesa" :disabled="submitted" v-if="form.type === 'new'" />
+                <Button label="Ya, Konfirmasi" icon="pi pi-check" @click="submit" :disabled="submitted" v-if="form.type === 'new'" />
                 <Button label="Ya, Konfirmasi Update" icon="pi pi-check" @click="updateVoteDesa" :disabled="submitted" v-if="!inputStatus && form.type === 'update'" />
                 <Button label="Konfirmasi" icon="pi pi-key" @click="checkPwd" :disabled="submitted" v-if="form.type === 'edit' && inputStatus" />
+            </template>
+        </Dialog>
+
+        <Dialog v-model:visible="addDialog" :style="{ width: '450px' }" :header="headerTitle" :modal="true" :closable="false" >
+            <div class="flex flex-col gap-6">
+                <div>
+                    <label for="desakel" class="block font-bold">Nama Desa/Kelurahan</label>
+                    <Select id="desakel" v-model="desaSelected" :options="desas" optionLabel="label" placeholder="Pilih Desa/Kelurahan" required="true" @blur="checkDesa" @change="checkDesa" :invalid="errorDesa.length > 0" fluid :disabled="submitted"></Select>
+                </div>
+                <div class="-mt-10" v-if="errorDesa.length">
+                    <label for="" class="font-semibold w-24">&nbsp;</label>
+                    <Message severity="error" class="">{{ errorDesa }}</Message>
+                </div>
+                <div class="grid grid-cols-1">
+                    <div class="mb-5" v-for="(psl, p) in paslons">
+                        <label for="name" class="block font-bold">{{ psl.nama_paslon }}</label>
+                        <InputNumber :id="`name_${psl.uuid_paslon}`" v-model="dataPaslon[p].point" required="true" :min="1" :max="100000" placeholder="0" fluid :disabled="submitted" />
+                    </div>
+                    <div class="mb-10">
+                        <label for="name" class="block font-bold">Suara Tidak Sah</label>
+                        <InputNumber id="invalid" v-model="form.voteInvalid" required="true" :min="1" :max="100000" placeholder="0" fluid :disabled="submitted" />
+                    </div>
+                </div>
+            </div>
+            <template #footer>
+                <Button label="Batal" icon="pi pi-times" text @click="addDialog = false" :disabled="submitted" />
+                <Button label="Simpan" icon="pi pi-check" @click="submitVoteDialog" :disabled="submitted" />
             </template>
         </Dialog>
     </div>

@@ -57,7 +57,8 @@ class StatistikController extends Controller
 
     public function testing()
     {
-        return $this->statistik->statistik_kecamatan();
+        // return $this->statistik->statistik_kecamatan();
+        return $this->vote->grafik();
     }
 
     public function testing_desa($kec)

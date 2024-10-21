@@ -75,27 +75,33 @@ class VoteController extends Controller
 
     public function save_voting($request)
     {
-        $uuid = Uuid::uuid4()->toString();
-        $data = [
-            'uuid_vote'     => $uuid,
-            'kec_id'        => $request->kec,
-            'desakel_id'    => $request->desa,
-            'desakel_name'  => $request->desaName,
-            'vote_sah'      => $request->voteValid,
-            'vote_tidaksah' => $request->voteInvalid ?? 0,
-            'tahun_vote'    => date('Y'),
-            'total_vote'    => $request->totalVote,
-            'user'          => $request->user,
-            'created_at'    => date('Y-m-d H:i:s'),
-        ];
-
-        $save = $this->vote->save_voting($data);
-        if ($save) {
-            $status = 'success';
-            $msg = 'Data berhasil di simpan';
-        } else {
+        $cek  = $this->vote->check_data($request->desa);
+        if (count($cek) > 0) {
             $status = 'error';
-            $msg = 'Data gagal di simpan';
+            $msg = 'Duplikat data';
+        } else {
+            $uuid = Uuid::uuid4()->toString();
+            $data = [
+                'uuid_vote'     => $uuid,
+                'kec_id'        => $request->kec,
+                'desakel_id'    => $request->desa,
+                'desakel_name'  => $request->desaName,
+                'vote_sah'      => $request->voteValid,
+                'vote_tidaksah' => $request->voteInvalid ?? 0,
+                'tahun_vote'    => date('Y'),
+                'total_vote'    => $request->totalVote,
+                'user'          => $request->user,
+                'created_at'    => date('Y-m-d H:i:s'),
+            ];
+
+            $save = $this->vote->save_voting($data);
+            if ($save) {
+                $status = 'success';
+                $msg = 'Data berhasil di simpan';
+            } else {
+                $status = 'error';
+                $msg = 'Data gagal di simpan';
+            }
         }
 
         return ['status' => $status, 'msg' => $msg];

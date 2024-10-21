@@ -32,6 +32,7 @@ class DashboardController extends Controller
             'kec'   => $this->data->data_kecamatan(),
             'desa'  => $this->data->data_desa(),
             'alldata' => $this->vote->all_data_voting(),
+            'grafik'=> $this->vote->grafik(),
         ]);
     }
 }

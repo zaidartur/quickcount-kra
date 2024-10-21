@@ -1,8 +1,9 @@
 import { computed, reactive, readonly } from 'vue';
 let _darkTheme = false
 // read saved theme from localStorage
-if (localStorage.getItem('theme') !== null) {
-    const theme = localStorage.getItem('theme')
+if (localStorage.getItem('themes') !== null) {
+    const theme = localStorage.getItem('themes')
+    console.log(theme)
     _darkTheme = JSON.parse(theme)
     if (_darkTheme) {
         document.documentElement.classList.toggle('app-dark')
@@ -62,10 +63,10 @@ export function useLayout() {
     };
 
     const executeDarkModeToggle = () => {
+        // saving theme to localStorage
+        localStorage.setItem('themes', JSON.stringify(layoutConfig.darkTheme))
         layoutConfig.darkTheme = !layoutConfig.darkTheme;
         document.documentElement.classList.toggle('app-dark');
-        // saving theme to localStorage
-        localStorage.setItem('theme', JSON.stringify(layoutConfig.darkTheme))
     };
 
     const onMenuToggle = () => {
