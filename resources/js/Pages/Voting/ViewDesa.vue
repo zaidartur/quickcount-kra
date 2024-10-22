@@ -351,7 +351,7 @@ const updateVoteDesa = () => {
     form.user       = auth.uuid
     form.type       = 'update'
 
-    console.log('update', form)
+    // console.log('update', form)
     checkDiffVote(newVote)
     checkInvalidDiff()
     form.post('/suara-masuk/tambah-data', {

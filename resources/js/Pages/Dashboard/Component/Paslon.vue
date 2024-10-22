@@ -73,7 +73,7 @@ socket.on('update-paslon', (up) => {
 </script>
 
 <template>
-    <div class="mb-10">
+    <div class="mb-10" v-if="dataPaslon.length > 0">
         <h2 class="w-full text-center py-5">
             Data Suara Masuk <br>
             {{ formatNumber(voteValid + voteInvalid) }} <small>suara</small>
@@ -104,6 +104,10 @@ socket.on('update-paslon', (up) => {
         <div class="w-full text-center">
             <label><i>* Suara Tidak Sah : {{ formatNumber(voteInvalid) }} Suara ({{ (voteInvalid / (voteValid+voteInvalid) * 100).toFixed(1) }}%)</i></label>
         </div>
+    </div>
+
+    <div class="w-full text-center" v-if="dataPaslon.length < 1">
+        <h1>Belum ada data Pasangan Calon</h1>
     </div>
 </template>
 

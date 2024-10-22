@@ -148,7 +148,10 @@ watch(
         <div class="col-span-12 xl:col-span-12">
             <div class="card">
                 <div class="font-semibold text-xl mb-4">Grafik Per Kecamatan</div>
-                <Chart type="bar" :data="barData" :options="barOptions"></Chart>
+                <Chart type="bar" :data="barData" :options="barOptions" v-if="dataGrafik.length > 0"></Chart>
+                <div class="w-full text-center" v-if="dataGrafik.length < 1">
+                    <h1>Belum ada data</h1>
+                </div>
             </div>
         </div>
     </Fluid>
