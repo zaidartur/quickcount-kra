@@ -79,7 +79,6 @@ class Vote extends Model
             $valid = 0;
             foreach ($datas as $d => $data) {
                 $votes = json_decode($data->vote_sah);
-                $invalid = $invalid + intval($data->vote_tidaksah);
                 foreach ($votes as $v => $vote) {
                     if ($vote->uuid == $value->uuid_paslon) {
                         $valid = $valid + intval($vote->point);
@@ -89,6 +88,9 @@ class Vote extends Model
             $result[$key] += [
                 'total' => $valid,
             ];
+        }
+        foreach ($datas as $d => $data) {
+            $invalid = $invalid + intval($data->vote_tidaksah);
         }
 
         return ['valid' => $result, 'invalid' => $invalid];

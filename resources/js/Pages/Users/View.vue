@@ -86,6 +86,7 @@ const errorPwd = ref('')
 const errorLevel = ref('')
 const errorKode = ref('')
 
+const roles = ref({})
 const editData = ref()
 const pwdGenerator = ref('')
 const pwdStrength = ref(24)
@@ -104,12 +105,19 @@ const form = useForm({
     pass: null,
     type: null,
 })
-const roles = [
-    {label: 'Super Admin', value: 0},
-    {label: 'Admin', value: 1},
-    {label: 'Admin Kecamatan', value: 2},
-    {label: 'Admin Desa/Kelurahan', value: 3},
-]
+if (auth.level < 2) {
+    roles.value = [
+        {label: 'Super Admin', value: 0},
+        {label: 'Admin', value: 1},
+        {label: 'Admin Kecamatan', value: 2},
+        {label: 'Admin Desa/Kelurahan', value: 3},
+    ]
+} else if (auth.level === 2) {
+    roles.value = [
+        {label: 'Admin Kecamatan', value: 2},
+        {label: 'Admin Desa/Kelurahan', value: 3},
+    ]
+}
 
 const roleLabel = [
     {label: 'Super Admin', value: 0},
@@ -392,7 +400,7 @@ const editUser = (prop) => {
     form.level  = prop.level
     form.kode   = prop.kode
 
-    levelSelected.value = findByValue(prop.level, roles)
+    levelSelected.value = findByValue(prop.level, roles.value)
     
     if (prop.level === 2) {
         kecamatanSelected.value = findByValue(prop.kode.toString(), kecamatan.value)

@@ -37,6 +37,9 @@ import ConfirmPopup from 'primevue/confirmpopup';
 import Dialog from 'primevue/dialog';
 import AnimateOnScroll from 'primevue/animateonscroll';
 
+import { Map, Layers, Sources, Interactions } from "vue3-openlayers";
+import OpenLayersMap from 'vue3-openlayers';
+
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
@@ -67,6 +70,11 @@ createInertiaApp({
             .use(DialogService)
             .use(ToastService)
             .use(ConfirmationService)
+            .use(OpenLayersMap)
+            // .use(Map)
+            // .use(Layers)
+            // .use(Sources)
+            // .use(Interactions)
             // .use(router)
             .directive('tooltip', Tooltip)
             .directive('badge', BadgeDirective)
