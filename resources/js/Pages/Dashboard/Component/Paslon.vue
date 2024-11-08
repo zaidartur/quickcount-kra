@@ -10,7 +10,10 @@ const datas = defineProps({
     desa: Object,
     suara: Object,
 })
-const socket = io('http://localhost:3000', {
+// const socket = io('http://localhost:3000', {
+//     withCredentials: true,
+// })
+const socket = io('https://qcws.caturnus.com', {
     withCredentials: true,
 })
 

@@ -36,7 +36,10 @@ const desas = ref(new Array())
 const paslons = ref(new Array())
 const votingPoint = ref(new Array())
 
-const socket = io('http://localhost:3000', {
+// const socket = io('http://localhost:3000', {
+//     withCredentials: true,
+// })
+const socket = io('https://qcws.caturnus.com', {
     withCredentials: true,
 })
 
@@ -140,7 +143,7 @@ const updateSocket = (datas) => {
 const findKecamatan = (val) => {
     let res = null
     kecamatan.value.map((kc) => {
-        if (kc.value === val) {
+        if (parseInt(kc.value) === parseInt(val)) {
             res = kc.label
         }
     })
@@ -160,9 +163,10 @@ const findDesa = (val) => {
 const myKecamatan = () => {
     let isKec = null
     if (auth.level === 2) {
-        isKec = auth.kode
+        isKec = (auth.kode < 10 ? ('0'+auth.kode.toString()) : auth.kode.toString())
     } else if (auth.level === 3) {
-        isKec = auth.kode.substr(2,2)
+        textKec = auth.kode.toString()
+        isKec = textKec.substr(2,2)
     }
 
     let res = []
@@ -179,7 +183,7 @@ const myDesa = () => {
     desaSelected.value = {}
     if (auth.level === 3) {
         desas.value.map((ds) => {
-            if (ds.value === auth.kode) {
+            if (parseInt(ds.value) === auth.kode) {
                 desaSelected.value = {
                     label: ds.label,
                     value: ds.value
@@ -207,8 +211,8 @@ const submitVoteDialog = () => {
 const submitVoteDesa = () => {
     const initVote  = votingPoint.value
     const invalid   = invalidVote.value
-    form.kec        = auth.kode.substr(2,2)
-    form.desa       = auth.kode
+    form.kec        = auth.kode.toString().substr(2,2)
+    form.desa       = auth.kode.toString()
     form.desaName   = desaSelected.value.label
     form.voteValid  = JSON.stringify(votingPoint.value)
     form.voteInvalid = invalidVote.value
@@ -342,8 +346,8 @@ const updateVoteDesa = () => {
     const newVote   = votingPoint.value
     form.id         = datas.mydata[0]?.id
     form.uuid       = datas.mydata[0]?.uuid_vote
-    form.kec        = auth.kode.substr(2,2)
-    form.desa       = auth.kode
+    form.kec        = auth.kode.toString().substr(2,2)
+    form.desa       = auth.kode.toString()
     form.desaName   = desaSelected.value.label
     form.voteValid  = JSON.stringify(votingPoint.value)
     form.voteInvalid = invalidVote.value
@@ -386,7 +390,7 @@ const alert_response = (rsp) => {
 
     <div>
         <h3 class="mb-5">Input Suara Masuk <span v-if="!detectMobile">{{ auth.level === 2 ? 'Kecamatan' : 'Desa/Kel.' }} {{ auth.level === 2 ? findKecamatan(auth.kode) : (auth.level === 3 ? (findDesa(auth.kode)+', '+findKecamatan(auth.kode.substr(2,2))) : '') }}</span></h3>
-        <h3 v-if="detectMobile" class="-mt-7">{{ auth.level === 2 ? 'Kecamatan' : 'Desa/Kel.' }} {{ auth.level === 2 ? findKecamatan(auth.kode) : (auth.level === 3 ? (findDesa(auth.kode)+', '+findKecamatan(auth.kode.substr(2,2))) : '') }}</h3>
+        <h3 v-if="detectMobile" class="-mt-7">{{ auth.level === 2 ? 'Kecamatan' : 'Desa/Kel.' }} {{ auth.level === 2 ? findKecamatan(auth.kode) : (auth.level === 3 ? (findDesa(auth.kode.toString())+', '+findKecamatan(auth.kode.toString().substr(2,2))) : '') }}</h3>
 
         <!-- <div class="flex flex-col md:flex-row md:w-8/12 w-full mb-5" v-if="auth.level === 7">
             <label for="kecamatan" class="md:w-5/12">Kecamatan</label>

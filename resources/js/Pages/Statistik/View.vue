@@ -43,7 +43,10 @@ const detailDialog = ref(false)
 const headerDetail = ref(null)
 const dataProgress = ref(new Array())
 
-const socket = io('http://localhost:3000', {
+// const socket = io('http://localhost:3000', {
+//     withCredentials: true,
+// })
+const socket = io('https://qcws.caturnus.com', {
     withCredentials: true,
 })
 
@@ -208,7 +211,7 @@ const filtered = (e) => {
 
 function formatNumber(value) {
     if (value) return value.toLocaleString({ style: 'number' })
-    return
+    return 0
 }
 
 const mouseOnCard = (e) => {
@@ -338,7 +341,8 @@ const setChartOptions = () => {
         <Toolbar class="mb-6">
             <template #start>
                 <h5 class="m-3">
-                    Total Suara Masuk : <span class="text-3xl">{{ formatNumber(totalSeluruhSuara) }}</span> {{ wdth }}
+                    Total Suara Masuk : <span class="text-3xl">{{ formatNumber(totalSeluruhSuara) }}</span> 
+                    <!-- {{ wdth }} -->
                 </h5>
             </template>
 
@@ -367,13 +371,13 @@ const setChartOptions = () => {
                         <span class="font-semibold">
                             {{ psl.nama }}
                         </span>
-                        <ProgressBar :value="psl.voting > 0 ? parseFloat((psl.voting/camat.total)*100).toFixed(2) : 0" :max="100" v-tooltip.bottom="(psl.voting > 0 ? parseFloat((psl.voting/camat.total)*100).toFixed(2) : 0) + '%'" :id="`bar_${camat.kec_id}_${psl.uuid}`" :class="clrLabel[p]"></ProgressBar>
+                        <ProgressBar :value="psl.voting > 0 ? parseFloat((psl.voting/camat.total)*100).toFixed(1) : 0" :max="100" v-tooltip.bottom="(psl.voting > 0 ? parseFloat((psl.voting/camat.total)*100).toFixed(1) : 0) + '%'" :id="`bar_${camat.kec_id}_${psl.uuid}`" :class="clrLabel[p]"></ProgressBar>
                     </div>
                     <div class="mb-3">
                         <span class="font-semibold">
                             Suara Tidak Sah
                         </span>
-                        <ProgressBar :value="camat.invalid > 0 ? (parseFloat(camat.invalid/camat.total)*100).toFixed(2) : 0" v-tooltip.bottom="(camat.invalid > 0 ? (parseFloat(camat.invalid/camat.total)*100).toFixed(2) : 0) + '%'" class="red"></ProgressBar>
+                        <ProgressBar :value="camat.invalid > 0 ? (parseFloat(camat.invalid/camat.total)*100).toFixed(1) : 0" v-tooltip.bottom="(camat.invalid > 0 ? (parseFloat(camat.invalid/camat.total)*100).toFixed(1) : 0) + '%'" class="red"></ProgressBar>
                     </div>
                 </div>
             </div>
@@ -407,13 +411,13 @@ const setChartOptions = () => {
                             <span class="font-semibold">
                                 {{ psl.nama }} ({{ formatNumber(psl.voting) ?? 0 }} suara)
                             </span>
-                            <ProgressBar :value="parseFloat((psl.voting/dataDetail.total)*100).toFixed(2)" v-tooltip.bottom="(psl.voting > 0 ? parseFloat((psl.voting/dataDetail.total)*100).toFixed(2) : 0) + '%'" :id="`bar_${dataDetail.kec_id}_${psl.uuid}`" :class="clrLabel[s]"></ProgressBar>
+                            <ProgressBar :value="parseFloat((psl.voting/dataDetail.total)*100).toFixed(1)" v-tooltip.bottom="(psl.voting > 0 ? parseFloat((psl.voting/dataDetail.total)*100).toFixed(1) : 0) + '%'" :id="`bar_${dataDetail.kec_id}_${psl.uuid}`" :class="clrLabel[s]"></ProgressBar>
                         </div>
                         <div class="mb-3">
                             <span class="font-semibold">
                                 Suara Tidak Sah ({{ formatNumber(dataDetail.invalid) ?? 0 }} suara)
                             </span>
-                            <ProgressBar :value="(parseFloat(dataDetail.invalid/dataDetail.total)*100).toFixed(2)" v-tooltip.bottom="(dataDetail.invalid > 0 ? (parseFloat(dataDetail.invalid/dataDetail.total)*100).toFixed(2) : 0) + '%'" class="red"></ProgressBar>
+                            <ProgressBar :value="(parseFloat(dataDetail.invalid/dataDetail.total)*100).toFixed(1)" v-tooltip.bottom="(dataDetail.invalid > 0 ? (parseFloat(dataDetail.invalid/dataDetail.total)*100).toFixed(1) : 0) + '%'" class="red"></ProgressBar>
                         </div>
                     </div>
                 </div>

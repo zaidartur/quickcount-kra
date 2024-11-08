@@ -37,7 +37,10 @@ const voteTotal = ref(0)
 const expandedRows = ref([])
 const dataPaslon = ref(new Array())
 
-const socket = io('http://localhost:3000', {
+// const socket = io('http://localhost:3000', {
+//     withCredentials: true,
+// })
+const socket = io('https://qcws.caturnus.com/', {
     withCredentials: true,
 })
 
@@ -191,7 +194,7 @@ const myDesa = () => {
     isDesa.value = {}
     if (auth.level === 3) {
         desas.value.map((ds) => {
-            if (ds.value === auth.kode) {
+            if (ds.value === (auth.kode.length < 2 ? ('0'+auth.kode) : auth.kode)) {
                 isDesa.value = {
                     label: ds.label,
                     value: ds.value
@@ -252,7 +255,7 @@ const checkDesa = () => {
 const submit = () => {
     const initVote  = dataPaslon.value
     const isInvalid = form.voteInvalid
-    form.kec        = auth.kode
+    form.kec        = (auth.kode.length < 2 ? ('0'+auth.kode) : auth.kode)
     form.desa       = desaSelected.value.value
     form.desaName   = desaSelected.value.label
     form.voteValid  = JSON.stringify(dataPaslon.value)
@@ -274,7 +277,7 @@ const submit = () => {
                 initVote.map((iv) => {
                     const data = {
                         uuid: iv.uuid,
-                        kec: auth.kode,
+                        kec: (auth.kode < 10 ? ('0'+auth.kode.toString()) : auth.kode.toString()),
                         desa: desaSelected.value.value,
                         vote: iv.point,
                     }
@@ -283,7 +286,7 @@ const submit = () => {
                 if (isInvalid > 0) {
                     const data = {
                         uuid: 'invalid',
-                        kec: auth.kode,
+                        kec: (auth.kode < 10 ? ('0'+auth.kode.toString()) : auth.kode.toString()),
                         desa: desaSelected.value.value,
                         vote: isInvalid,
                     }
@@ -385,7 +388,7 @@ const checkDiffVote = () => {
             const diff = parseInt(newest[i].point) - parseInt(d.point)
             const data = {
                 uuid: d.uuid,
-                kec: auth.kode,
+                kec: (auth.kode < 10 ? ('0'+auth.kode.toString()) : auth.kode.toString()),
                 desa: desaSelected.value.value,
                 vote: diff,
             }
@@ -401,7 +404,7 @@ const checkInvalidDiff = () => {
     if (diff !== 0) {
         const data = {
             uuid: 'invalid',
-            kec: auth.kode,
+            kec: (auth.kode < 10 ? ('0'+auth.kode.toString()) : auth.kode.toString()),
             desa: desaSelected.value.value,
             vote: diff,
         }
@@ -447,7 +450,7 @@ const alert_response = (rsp) => {
     <Head title="Suara Masuk" />
 
     <div>
-        <h3 class="mb-5">Input suara masuk {{ auth.level === 2 ? 'Kecamatan' : 'Desa/Kel.' }} {{ auth.level === 2 ? findKecamatan(auth.kode) : (auth.level === 3 ? (findDesa(auth.kode)+', '+findKecamatan(auth.kode.substr(2,2))) : '') }}</h3>
+        <h3 class="mb-5">Input suara masuk {{ auth.level === 2 ? 'Kecamatan' : 'Desa/Kel.' }} {{ auth.level === 2 ? findKecamatan((auth.kode.length < 2 ? ('0'+auth.kode) : auth.kode)) : (auth.level === 3 ? (findDesa(auth.kode)+', '+findKecamatan(auth.kode.substr(2,2))) : '') }}</h3>
 
         <!-- <div class="mb-5">
             <Button label="Tambah Data" icon="pi pi-plus-circle" @click="submitVoteDialog" />

@@ -83,7 +83,7 @@ class VoteController extends Controller
             $uuid = Uuid::uuid4()->toString();
             $data = [
                 'uuid_vote'     => $uuid,
-                'kec_id'        => $request->kec,
+                'kec_id'        => (strlen($request->kec) < 2 ? ('0'.$request->kec) : $request->kec),
                 'desakel_id'    => $request->desa,
                 'desakel_name'  => $request->desaName,
                 'vote_sah'      => $request->voteValid,

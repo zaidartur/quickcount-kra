@@ -328,7 +328,7 @@ const findByValue = (val, objects) => {
     let data = []
     // console.log(val, objects)
     objects.map((arr) => {
-        if (arr.value === val) {
+        if (parseInt(arr.value) === parseInt(val)) {
             data = arr
         }
     })
@@ -392,6 +392,7 @@ const editUser = (prop) => {
     desaSelected.value = []
     kecamatanSelected.value = []
     headerTitle.value = 'Edit User'
+    const kode = (prop.kode.length < 2 ? ('0'+prop.kode) : prop.kode)
     form.reset()
     form.type = 'edit'
     form.name   = prop.name
@@ -405,7 +406,7 @@ const editUser = (prop) => {
     if (prop.level === 2) {
         kecamatanSelected.value = findByValue(prop.kode.toString(), kecamatan.value)
         desa.value.map((ds) => {
-            if (ds.kec_id === prop.kode.toString()) {            
+            if (parseInt(ds.kec_id) === parseInt(prop.kode)) {
                 selectDesa.value.push({
                     label: ds.desakel_name,
                     value: ds.full_id
