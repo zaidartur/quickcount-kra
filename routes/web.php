@@ -85,10 +85,15 @@ Route::middleware('auth')->group(function () {
         Route::post('/hapus-user', [UserController::class, 'delete_user'])->name('users.delete');
     });
 
+    Route::prefix('profile')->group(function() {
+        Route::get('/', [ProfileController::class, 'view'])->name('profile');
+        Route::post('/update-data', [ProfileController::class, 'is_update'])->name('profile.update');
+    });
+
     Route::get('/download-template/{data}', [DataController::class, 'template_download'])->name('template');
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 require __DIR__.'/auth.php';

@@ -142,9 +142,11 @@ const updateSocket = (datas) => {
 
 const findKecamatan = (val) => {
     let res = null
-    kecamatan.value.map((kc) => {
-        if (parseInt(kc.value) === parseInt(val)) {
+    const kec = (val.length < 2 ? ('0'+val) : val)
+    kecamatan.value.some((kc) => {
+        if (kc.value === kec) {
             res = kc.label
+            return true
         }
     })
     return res
@@ -152,9 +154,10 @@ const findKecamatan = (val) => {
 
 const findDesa = (val) => {
     let res = null
-    datas.desa.map((ds) => {
+    datas.desa.some((ds) => {
         if (ds.full_id === val) {
             res = ds.desakel_name
+            return true
         }
     })
     return res
@@ -165,7 +168,7 @@ const myKecamatan = () => {
     if (auth.level === 2) {
         isKec = (auth.kode < 10 ? ('0'+auth.kode.toString()) : auth.kode.toString())
     } else if (auth.level === 3) {
-        textKec = auth.kode.toString()
+        const textKec = auth.kode.toString()
         isKec = textKec.substr(2,2)
     }
 
@@ -389,8 +392,8 @@ const alert_response = (rsp) => {
     <Head title="Suara Masuk" />
 
     <div>
-        <h3 class="mb-5">Input Suara Masuk <span v-if="!detectMobile">{{ auth.level === 2 ? 'Kecamatan' : 'Desa/Kel.' }} {{ auth.level === 2 ? findKecamatan(auth.kode) : (auth.level === 3 ? (findDesa(auth.kode)+', '+findKecamatan(auth.kode.substr(2,2))) : '') }}</span></h3>
-        <h3 v-if="detectMobile" class="-mt-7">{{ auth.level === 2 ? 'Kecamatan' : 'Desa/Kel.' }} {{ auth.level === 2 ? findKecamatan(auth.kode) : (auth.level === 3 ? (findDesa(auth.kode.toString())+', '+findKecamatan(auth.kode.toString().substr(2,2))) : '') }}</h3>
+        <h3 class="mb-5">Input Suara Masuk <span v-if="!detectMobile">{{ auth.level === 2 ? 'Kecamatan' : 'Desa/Kel.' }} {{ auth.level === 2 ? findKecamatan(auth.kode.toString()) : (auth.level === 3 ? (findDesa(auth.kode.toString())+', '+findKecamatan(auth.kode.toString().substr(2,2))) : '') }}</span></h3>
+        <h3 v-if="detectMobile" class="-mt-7">{{ auth.level === 2 ? 'Kecamatan' : 'Desa/Kel.' }} {{ auth.level === 2 ? findKecamatan(auth.kode.toString()) : (auth.level === 3 ? (findDesa(auth.kode.toString())+', '+findKecamatan(auth.kode.toString().substr(2,2))) : '') }}</h3>
 
         <!-- <div class="flex flex-col md:flex-row md:w-8/12 w-full mb-5" v-if="auth.level === 7">
             <label for="kecamatan" class="md:w-5/12">Kecamatan</label>

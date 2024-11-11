@@ -40,16 +40,39 @@ const initData = () => {
 }
 
 const initWilayah = () => {
-    if (datas.kec.length > 0) {
-        kecamatan.value = []
-        datas.kec.map((val, i) => {
-            kecamatan.value.push({
-                label: val.kec_name,
-                value: val.kec_id
-            })
-        }) 
+    if (auth.level < 2) {
+        if (datas.kec.length > 0) {
+            kecamatan.value = []
+            datas.kec.map((val, i) => {
+                kecamatan.value.push({
+                    label: val.kec_name,
+                    value: val.kec_id
+                })
+            }) 
+        } else {
+            kecamatan.value = []
+        }
     } else {
-        kecamatan.value = []
+        let kode = null
+        if (auth.level === 2) {
+            kode = (auth.kode < 10 ? ('0'+auth.kode.toString()) : auth.kode.toString())
+        } else if (auth.level === 3) {
+            kode = (auth.kode.toString().substr(2,2))
+        }
+        if (datas.kec.length > 0) {
+            kecamatan.value = []
+            datas.kec.some((val, i) => {
+                if (val.kec_id === kode) {
+                    kecamatan.value.push({
+                        label: val.kec_name,
+                        value: val.kec_id
+                    })
+                    return true
+                }
+            }) 
+        } else {
+            kecamatan.value = []
+        }
     }
 
     if (datas.desa.length > 0) {
@@ -64,7 +87,7 @@ const initWilayah = () => {
 
 initData()
 initWilayah()
-// console.log(page.props.auth.user)
+// console.log(auth.level, kecamatan.value)
 const dt = ref();
 const accountSelected = ref([])
 const kecamatanSelected = ref()
@@ -115,6 +138,10 @@ if (auth.level < 2) {
 } else if (auth.level === 2) {
     roles.value = [
         {label: 'Admin Kecamatan', value: 2},
+        {label: 'Admin Desa/Kelurahan', value: 3},
+    ]
+} else if (auth.level === 3) {
+    roles.value = [
         {label: 'Admin Desa/Kelurahan', value: 3},
     ]
 }
@@ -326,12 +353,16 @@ const copyPwd = () => {
 
 const findByValue = (val, objects) => {
     let data = []
-    // console.log(val, objects)
-    objects.map((arr) => {
-        if (parseInt(arr.value) === parseInt(val)) {
-            data = arr
-        }
-    })
+    // const uid = (val.length < 2 ? ('0'+val) : val)
+
+    if (objects.length > 0) {
+        objects.some((arr) => {
+            if (arr.value === val) {
+                data = arr
+                return true
+            }
+        })
+    }
     return data
 }
 
@@ -387,12 +418,12 @@ const detailUser = (prop) => {
 }
 
 const editUser = (prop) => {
+    // console.log('pr', prop)
     selectDesa.value = []
     selectKec.value = []
     desaSelected.value = []
     kecamatanSelected.value = []
     headerTitle.value = 'Edit User'
-    const kode = (prop.kode.length < 2 ? ('0'+prop.kode) : prop.kode)
     form.reset()
     form.type = 'edit'
     form.name   = prop.name
@@ -402,11 +433,13 @@ const editUser = (prop) => {
     form.kode   = prop.kode
 
     levelSelected.value = findByValue(prop.level, roles.value)
-    
+
+    // kecamatan
     if (prop.level === 2) {
-        kecamatanSelected.value = findByValue(prop.kode.toString(), kecamatan.value)
+        const kode = (prop.kode.length < 2 ? ('0'+prop.kode.toString()) : prop.kode.toString())
+        kecamatanSelected.value = findByValue(kode, kecamatan.value)
         desa.value.map((ds) => {
-            if (parseInt(ds.kec_id) === parseInt(prop.kode)) {
+            if (ds.kec_id === kode) {
                 selectDesa.value.push({
                     label: ds.desakel_name,
                     value: ds.full_id
@@ -414,6 +447,7 @@ const editUser = (prop) => {
             }
         })
     }
+    // desakel
     if (prop.level === 3) {
         const isKode = prop.kode.toString()
         const kec = isKode.substr(2, 2)

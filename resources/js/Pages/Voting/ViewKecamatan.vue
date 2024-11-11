@@ -154,9 +154,10 @@ function collapseAll() {
 
 const findKecamatan = (val) => {
     let res = null
-    kecamatan.value.map((kc) => {
+    kecamatan.value.some((kc) => {
         if (kc.value === val) {
             res = kc.label
+            return true
         }
     })
     return res
@@ -164,9 +165,10 @@ const findKecamatan = (val) => {
 
 const findDesa = (val) => {
     let res = null
-    datas.desa.map((ds) => {
+    datas.desa.some((ds) => {
         if (ds.full_id === val) {
             res = ds.desakel_name
+            return true
         }
     })
     return res
@@ -450,7 +452,7 @@ const alert_response = (rsp) => {
     <Head title="Suara Masuk" />
 
     <div>
-        <h3 class="mb-5">Input suara masuk {{ auth.level === 2 ? 'Kecamatan' : 'Desa/Kel.' }} {{ auth.level === 2 ? findKecamatan((auth.kode.length < 2 ? ('0'+auth.kode) : auth.kode)) : (auth.level === 3 ? (findDesa(auth.kode)+', '+findKecamatan(auth.kode.substr(2,2))) : '') }}</h3>
+        <h3 class="mb-5">Input suara masuk {{ auth.level === 2 ? 'Kecamatan' : 'Desa/Kel.' }} {{ auth.level === 2 ? findKecamatan((auth.kode < 10 ? ('0'+auth.kode.toString()) : auth.kode.toString())) : (auth.level === 3 ? (findDesa(auth.kode.toString())+', '+findKecamatan(auth.kode.toString().substr(2,2))) : '') }}</h3>
 
         <!-- <div class="mb-5">
             <Button label="Tambah Data" icon="pi pi-plus-circle" @click="submitVoteDialog" />

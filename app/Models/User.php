@@ -55,6 +55,11 @@ class User extends Authenticatable
         return DB::table('users')->where('uuid', $uid)->select('*')->first();
     }
 
+    public function update_user($data, $id) 
+    {
+        return DB::table('users')->where('uuid', $id)->update($data);
+    }
+
     public function list_user()
     {
         $level = Auth::user()->level;

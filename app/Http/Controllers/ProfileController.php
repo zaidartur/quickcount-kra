@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Data;
+use App\Models\Setting;
+use App\Models\User;
+use App\Models\Vote;
+
 use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
@@ -13,6 +18,17 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
+    private $vote;
+    private $data;
+    private $user;
+    private $setting;
+    public function __construct() {
+        $this->vote = new Vote();
+        $this->data = new Data();
+        $this->user = new User();
+        $this->setting = new Setting();
+    }
+
     /**
      * Display the user's profile form.
      */
@@ -59,5 +75,44 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    public function view()
+    {
+        return Inertia::render('Profile', [
+            'apps'   => $this->setting->get_app(),
+            'status' => session('status'),
+            'detail' => $this->user->detail_user(Auth::user()->uuid),
+        ]);
+    }
+
+    public function is_update(Request $request) 
+    {
+        $validated = $request->validate([
+            'name'  => 'required|string',
+            'uuid'  => 'required|string',
+        ]);
+
+        if ($validated) {
+            $data = [
+                'name'  => $request->name,
+            ];
+
+            // $save = $this->user->update_user($data, $request->uuid);
+            $save = User::where('uuid', $request->uuid)->update($data);
+            if ($save) {
+                $status = 'success';
+                $msg = 'Data berhasil di update';
+            } else {
+                $status = 'error';
+                $msg = 'Data gagal di update';
+            }
+        } else {
+            $status = 'error';
+            $msg = 'Data tidak sesuai';
+        }
+
+        $res  = ['status' => $status, 'msg' => $msg];
+        return Redirect::route('profile')->with('message', $res);
     }
 }
