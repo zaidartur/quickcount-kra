@@ -96,6 +96,45 @@ class Vote extends Model
         return ['valid' => $result, 'invalid' => $invalid];
     }
 
+    public function data_voting_paslon_kecamatan($kec)
+    {
+        $result = [];
+        $paslon = DB::table('data_paslon')->where('tahun', date('Y'))->orderBy('no_urut')->get();
+        $datas  = DB::table('data_voting as dv')->leftJoin('data_kecamatan as dk', 'dk.kec_id', '=', 'dv.kec_id')
+                ->leftJoin('data_desa as dd', 'dd.full_id', '=', 'dv.desakel_id')
+                ->leftJoin('users as u', 'u.uuid', '=', 'dv.user')
+                ->select('dv.*', 'dk.kec_name', 'dd.desakel_name', 'dd.desakel_id', 'u.name', 'u.level', 'u.kode')
+                ->where('dk.kec_id', $kec)
+                ->get();
+
+        $invalid = 0;
+        foreach ($paslon as $key => $value) {
+            $result[$key] = [
+                'uuid'  => $value->uuid_paslon,
+                'name'  => $value->nama_paslon,
+                'urut'  => $value->no_urut,
+                'foto'  => $value->foto_paslon,
+            ];
+            $valid = 0;
+            foreach ($datas as $d => $data) {
+                $votes = json_decode($data->vote_sah);
+                foreach ($votes as $v => $vote) {
+                    if ($vote->uuid == $value->uuid_paslon) {
+                        $valid = $valid + intval($vote->point);
+                    }
+                }
+            }
+            $result[$key] += [
+                'total' => $valid,
+            ];
+        }
+        foreach ($datas as $d => $data) {
+            $invalid = $invalid + intval($data->vote_tidaksah);
+        }
+
+        return ['valid' => $result, 'invalid' => $invalid];
+    }
+
     public function check_data($desa)
     {
         return DB::table('data_voting')->where('desakel_id', $desa)->where('tahun_vote', date('Y'))->get();

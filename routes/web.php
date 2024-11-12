@@ -40,6 +40,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/testing/desa/{kec}', [StatistikController::class, 'testing_desa']);
     });
 
+    Route::prefix('/tabel-statistik')->group(function() {
+        Route::get('/', [StatistikController::class, 'view_tabel'])->name('tabel');
+        Route::get('/detail/{uid}', [StatistikController::class, 'detail_tabel_statistik'])->name('tabel.detail');
+        Route::post('/kecamatan', [StatistikController::class, 'detail_tabel_kecamatan'])->name('tabel.kec');
+
+        Route::get('/testing/kecamatan', [StatistikController::class, 'testing_tabel'])->name('tabel.test');
+        Route::get('/testing/desa/{kec}', [StatistikController::class, 'testing_desa_tabel']);
+    });
+
     Route::prefix('/suara-masuk')->group(function() {
         Route::get('/', [VoteController::class, 'view'])->name('vote');
         Route::get('/detail/{uid}', [VoteController::class, 'detail_voting'])->name('vote.detail');

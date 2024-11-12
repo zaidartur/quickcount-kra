@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Oct 18, 2024 at 08:01 AM
+-- Generation Time: Nov 12, 2024 at 01:09 AM
 -- Server version: 8.0.30
 -- PHP Version: 7.4.33
 
@@ -439,7 +439,8 @@ CREATE TABLE `data_voting` (
 --
 
 INSERT INTO `data_voting` (`id`, `uuid_vote`, `kec_id`, `desakel_id`, `desakel_name`, `vote_sah`, `vote_tidaksah`, `tahun_vote`, `total_vote`, `user`, `created_at`, `updated_at`) VALUES
-(1, 'd4172379-c0e1-4b3e-8d7c-b60aa41fe206', '12', '13122002', 'Bolon', '[{\"uuid\":\"df4dd30c-a043-4a02-ac9a-49ba419967a1\",\"name\":\"Samsung\",\"point\":\"10\"},{\"uuid\":\"8a14644c-dc00-4e90-b139-af2d75fed254\",\"name\":\"Randomizes\",\"point\":\"22\"},{\"uuid\":\"f5b14be3-e9e6-40c5-80f4-0ac37bee3406\",\"name\":\"Lorem\",\"point\":\"18\"}]', '0', 2024, 50, '923791fe-96d6-4a92-a16f-b25efb504bfc', '2024-10-18 03:44:23', NULL);
+(1, 'd4172379-c0e1-4b3e-8d7c-b60aa41fe206', '12', '13122002', 'Bolon', '[{\"uuid\":\"df4dd30c-a043-4a02-ac9a-49ba419967a1\",\"name\":\"Samsung\",\"point\":\"10\"},{\"uuid\":\"8a14644c-dc00-4e90-b139-af2d75fed254\",\"name\":\"Randomizes\",\"point\":\"22\"},{\"uuid\":\"f5b14be3-e9e6-40c5-80f4-0ac37bee3406\",\"name\":\"Lorem\",\"point\":\"18\"}]', '0', 2024, 50, '923791fe-96d6-4a92-a16f-b25efb504bfc', '2024-10-18 03:44:23', NULL),
+(23, 'a6b534dd-7b87-4d65-bb57-f1f5a5c00cc5', '10', '13102004', 'Gaum', '[{\"uuid\":\"df4dd30c-a043-4a02-ac9a-49ba419967a1\",\"name\":\"Samsung\",\"point\":27},{\"uuid\":\"8a14644c-dc00-4e90-b139-af2d75fed254\",\"name\":\"Randomizes\",\"point\":25},{\"uuid\":\"f5b14be3-e9e6-40c5-80f4-0ac37bee3406\",\"name\":\"Lorem\",\"point\":32}]', '5', 2024, 89, 'f115b998-154e-44ab-bb20-82fab8751c76', '2024-10-21 02:49:28', '2024-10-21 03:39:45');
 
 -- --------------------------------------------------------
 
@@ -549,9 +550,8 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('8cYTIHi5Uioy2BIkMMFNBGnejs7A8h8VaGrgbV4c', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoid3h0YTlUbGFFWFNiR09RZHc2ZUQxM0xSMDlYWTJFS0VsYUxHS09XVCI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjMxOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvc3RhdGlzdGlrIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1729235785),
-('9AEHVdbwBy4SwoMWlEAI5g5CgxXrNjuv6UwXAp29', 9, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiQlp1OWhLb2Z5Sk12NWJTdnhjMUNTSEdSNERTbDdjeWlkS2dqakRoNiI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzM6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9zdWFyYS1tYXN1ayI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjk7fQ==', 1729235781),
-('svrwyc8K716SSixQ1U7y4znSlFIB1hwfYdFR5mKc', 10, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:131.0) Gecko/20100101 Firefox/131.0', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoid1VydVV0VlViRHBoaVZGQktPWlkwV1h2VGtwbG5yWlNodGRqa2FzdyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzM6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9zdWFyYS1tYXN1ayI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6MzoidXJsIjthOjA6e31zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxMDt9', 1729238392);
+('gz6QRCvoZr9iiJKkFl7OaVgzicX754a3xxSnrX3g', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiOWY0NVF0RjR5YW5nbmMyM0ptVjdrT2d3MWNCYjJJYm5lOEowWjk0UiI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czozMToiaHR0cDovLzEyNy4wLjAuMTo4MDAwL2Rhc2hib2FyZCI7fX0=', 1731317333),
+('Z4uvXAJxK4PKubuQr7DPjgpo99RmYm9nZWYpE1oR', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiV3g3cldDUWVEMzRNVmp0dkhLRDllNWR5dDFTeHJjaklsNHhPRFZ0NSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czozMToiaHR0cDovLzEyNy4wLjAuMTo4MDAwL2Rhc2hib2FyZCI7fX0=', 1731317233);
 
 -- --------------------------------------------------------
 
@@ -581,7 +581,7 @@ INSERT INTO `users` (`id`, `name`, `uuid`, `email`, `email_verified_at`, `passwo
 (1, 'Samsung', 'fbd710b1-d885-401f-82e6-aa3ea929d73e', 'admin@admin.com', NULL, '$2y$12$mPVL8fTCyBWezzPOUJSi2O9rC/te4JAr7Cz8tQWcnOFGzUQbGYgzi', 0, NULL, NULL, '2024-10-03 09:15:47', '2024-10-16 01:27:44'),
 (6, 'Lorem Ipsum', '610cc8d1-3ceb-46f8-bf30-67b1bc180842', 'user@mail.com', NULL, '$2y$12$CTL0./iBD6SuXzZT99JznuTtbQO4YdR2/mgCBEHhrRlBhB0GFqbK.', 2, '12', NULL, '2024-10-15 07:29:20', '2024-10-16 03:05:19'),
 (9, 'Dell', '923791fe-96d6-4a92-a16f-b25efb504bfc', 'mail@mail.com', NULL, '$2y$12$OVz7Oob9N19XEp0KDUjPPu3tt/wcpOmLy2ofu/ZNBflygiWqUWTV2', 3, '13122002', NULL, '2024-10-16 02:43:29', '2024-10-16 02:43:29'),
-(10, 'Genius', 'f115b998-154e-44ab-bb20-82fab8751c76', 'user@user.com', NULL, '$2y$12$eL8Kh.bndArlRbRF4j67b.p86O0jTHYI6xFaEod6BuugGML7zfmya', 3, '13102004', NULL, '2024-10-16 02:45:39', '2024-10-16 02:45:39');
+(10, 'Geniusses', 'f115b998-154e-44ab-bb20-82fab8751c76', 'user@user.com', NULL, '$2y$12$eL8Kh.bndArlRbRF4j67b.p86O0jTHYI6xFaEod6BuugGML7zfmya', 3, '13102004', NULL, '2024-10-16 02:45:39', '2024-11-11 09:23:56');
 
 --
 -- Indexes for dumped tables
@@ -726,7 +726,7 @@ ALTER TABLE `data_paslon`
 -- AUTO_INCREMENT for table `data_voting`
 --
 ALTER TABLE `data_voting`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `failed_jobs`

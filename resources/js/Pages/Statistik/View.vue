@@ -335,7 +335,7 @@ const setChartOptions = () => {
 </script>
 
 <template>
-    <Head title="Statistik" />
+    <Head title="Grafik Statistik" />
 
     <div>
         <Toolbar class="mb-6">

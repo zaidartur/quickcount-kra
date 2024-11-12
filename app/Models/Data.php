@@ -18,6 +18,11 @@ class Data extends Model
         return DB::table('data_kecamatan')->get();
     }
 
+    public function detail_kecamatan($kec)
+    {
+        return DB::table('data_kecamatan')->where('kec_id', $kec)->first();
+    }
+
     public function all_desa()
     {
         return DB::table('data_desa as dd')
