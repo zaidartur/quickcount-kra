@@ -24,25 +24,29 @@ class DptImport implements ToArray, WithChunkReading, WithHeadingRow
     public function array(array $rows)
     {
         foreach ($rows as $row) {
-            if (!isset($row['kode_kecamatan']) || !isset($row['kode_desa']) || !isset($row['tahun']) || !isset($row['jumlah']) || !isset($row['nama_kecamatan']) || !isset($row['nama_desa'])) {
+            if (!isset($row['kodekabalamat']) || !isset($row['kec']) || !isset($row['desakel']) || !isset($row['jumlah_dpt']) || !isset($row['nomor_tps'])) {
                 $this->template = 'Template file tidak sesuai';
                 break;
             } else {
-                $kecamatan = (strlen($row['kode_kecamatan']) < 2 ? ('0' . $row['kode_kecamatan']) : $row['kode_kecamatan']);
-                $check = DB::table('data_dpt')->where('desakel_id', $row['kode_desa'])->where('kec_id', $kecamatan)->get();
-                if (count($check) > 0) {
-                    // $this->duplicate[] = $row;
-                    array_push($this->duplicate, $row);
-                } else {
-                    DB::table('data_dpt')->insert([
-                        'kotakab_id'    => 13,
-                        'kec_id'        => $kecamatan,
-                        'desakel_id'    => $row['kode_desa'],
-                        'full_id'       => 13 . $kecamatan . $row['kode_desa'],
-                        'tahun_dpt'     => $row['tahun'],
-                        'total'         => $row['jumlah'],
-                        'created_at'    => date('Y-m-d H:i:s')
-                    ]);
+                $iskec = DB::table('data_kecamatan')->where('kec_name', ucfirst(strtolower($row['kec'])))->first();
+                if ($iskec) {
+                    $desa = DB::table('data_desa')->where('desakel_name', ucfirst(strtolower($row['desakel'])))->where('kec_id', $iskec->kec_id)->first();
+                    if ($desa) {
+                        $kecamatan = $desa->kec_id;
+                        DB::table('data_dpt')->insert([
+                            'kotakab_id'    => 13,
+                            'kec_id'        => $kecamatan,
+                            // 'desakel_id'    => $row['kode_desa'],
+                            // 'full_id'       => 13 . $kecamatan . $row['kode_desa'],
+                            'desakel_id'    => $desa->desakel_id,
+                            'full_id'       => $desa->full_id,
+                            'kpu_id'        => $row['kodekabalamat'],
+                            'no_tps'        => intval($row['nomor_tps']),
+                            'tahun_dpt'     => date('Y'),
+                            'total'         => $row['jumlah_dpt'],
+                            'created_at'    => date('Y-m-d H:i:s')
+                        ]);
+                    }
                 }
             }
         }

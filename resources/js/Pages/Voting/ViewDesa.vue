@@ -1,19 +1,18 @@
 <script setup>
-import { defineProps, onMounted, ref } from 'vue';
+import { defineProps, ref, onBeforeMount } from 'vue';
 import { useForm, usePage } from '@inertiajs/vue3';
 import { io } from 'socket.io-client';
 import axios from 'axios';
 import { useToast } from 'primevue/usetoast';
-import InputIcon from 'primevue/inputicon';
-import InputText from 'primevue/inputtext';
-import IconField from 'primevue/iconfield';
 import Select from 'primevue/select';
-import InputGroup from 'primevue/inputgroup';
-import InputGroupAddon from 'primevue/inputgroupaddon';
+import Message from 'primevue/message';
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import Password from 'primevue/password';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
 import InputNumber from 'primevue/inputnumber';
+import Tag from 'primevue/tag';
 
 const page  = usePage()
 const message = page.props.flash.message
@@ -25,29 +24,36 @@ const datas = defineProps({
     desa: Object,
     paslon: Object,
     mydata: Object,
-})
-onMounted(() => {
-    isMobile()
-    window.addEventListener('resize', isMobile)
+    role: Object,
+    sumDPT: Number,
 })
 
 const kecamatan = ref(new Array())
 const desas = ref(new Array())
+const datatps = ref(new Array())
 const paslons = ref(new Array())
+const voteData = ref(new Array())
+const defaultData = datas.mydata.map((my) => {
+    return my
+})
 const votingPoint = ref(new Array())
+const voteTotal = ref(0)
+const expandedRows = ref([])
+const dataPaslon = ref(new Array())
 
-// const socket = io('http://localhost:3000', {
-//     withCredentials: true,
-// })
-const socket = io('https://qcws.caturnus.com', {
+const socket = io('http://localhost:3000', {
     withCredentials: true,
 })
+// const socket = io('https://qcws.caturnus.com/', {
+//     withCredentials: true,
+// })
 
 const initData = () => {
+    defaultData.value = []
     kecamatan.value = []
-    paslons.value = []
+    voteData.value = []
     desas.value = []
-    let calon = []
+    paslons.value = []
 
     if (datas.kec) {
         datas.kec.map((val, i) => {
@@ -65,43 +71,46 @@ const initData = () => {
             })
         })
     }
+    if (datas.mydata) {
+        datas.mydata.map((my) => {
+            voteData.value.push(my)
+        })
+    }
     if (datas.paslon) {
-        datas.paslon.map((ps, p) => {
-            paslons.value.push(ps)
-            calon.push({
-                uuid: ps.uuid_paslon,
-                name: ps.nama_paslon,
-                point: 0,
+        datas.paslon.map((dp) => {
+            paslons.value.push(dp)
+        })
+    }
+}
+
+const initPaslon = async() => {
+    dataPaslon.value = []
+    if (datas.paslon) {
+        datas.paslon.map((dp) => {
+            dataPaslon.value.push({
+                uuid: dp.uuid_paslon,
+                name: dp.nama_paslon,
+                point: 0
             })
         })
     }
-    if (datas.mydata.length > 0) {
-        calon = []
-        if (auth.level === 3) {
-            const vote = JSON.parse(datas.mydata[0].vote_sah)
-            calon = vote
-        }
-    } else {
-        calon = []
-        datas.paslon.map((ps) => {
-            calon.push({
-                uuid: ps.uuid_paslon,
-                name: ps.nama_paslon,
-                point: 0,
-            })
-        })
-    }
-    votingPoint.value = calon
-    // console.log('vote', calon)
 }
 
 initData()
-const kecamatanSelected = ref(new Array())
-const desaSelected = ref(new Array())
+initPaslon()
+
+const dt = ref()
+const isDesa = ref()
+const dataEdit = ref(null)
+const desaSelected = ref()
+const tpsSelected = ref()
 const confirmDialog = ref(false)
+const addDialog = ref(false)
 const submitted = ref(false)
+const headerTitle = ref('Tambah Data')
+const errorDesa = ref('')
 const myPassword = ref(null)
-const detectMobile = ref(false)
+const jumlahDPT = ref(null)
 const invalidVote = ref(
     datas.mydata.length > 0 ? datas.mydata[0].vote_tidaksah : 0
 )
@@ -112,15 +121,17 @@ const editLabel = ref({
 const inputStatus = ref(
     datas.mydata.length > 0 ? true : false
 )
-const roleLabel = ['Super Admin', 'Admin', 'Admin Kecamatan', 'Admin Desa']
+const roleLabel = ['Super Admin', 'Admin', 'Admin Kecamatan', 'Admin Desa', 'Admin TPS']
 const form = useForm({
     id: null,
     uuid: null,
+    dpt: null,
     kec: null,
     desa: null,
     desaName: null,
+    tps: null,
     voteValid: null,
-    voteInvalid: null,
+    voteInvalid: 0,
     totalVote: null,
     tahun: null,
     user: null,
@@ -129,22 +140,32 @@ const form = useForm({
 
 const sendingSocket = (datas) => {
     // console.log('socket', datas)
-    // uuid, kec, desa, vote(+-)
-    // socket.on('connection', (sc) => {
-    //     //
-    // })
+    const add = voteTotal.value + datas.vote
+    voteTotal.value = add
+    console.log('sendig', datas)
     socket.emit('sending-paslon', datas)
 }
 
 const updateSocket = (datas) => {
+    // console.log('update-socket', datas)
+    const add = voteTotal.value + datas.vote
+    voteTotal.value = add
+    console.log('updating', datas)
     socket.emit('updating-paslon', datas)
+}
+
+function expandAll() {
+    expandedRows.value = voteData.value.reduce((acc, p) => (acc[p.id] = true) && acc, {});
+}
+
+function collapseAll() {
+    expandedRows.value = null;
 }
 
 const findKecamatan = (val) => {
     let res = null
-    const kec = (val.length < 2 ? ('0'+val) : val)
     kecamatan.value.some((kc) => {
-        if (kc.value === kec) {
+        if (kc.value === val) {
             res = kc.label
             return true
         }
@@ -163,97 +184,160 @@ const findDesa = (val) => {
     return res
 }
 
-const myKecamatan = () => {
-    let isKec = null
-    if (auth.level === 2) {
-        isKec = (auth.kode < 10 ? ('0'+auth.kode.toString()) : auth.kode.toString())
-    } else if (auth.level === 3) {
-        const textKec = auth.kode.toString()
-        isKec = textKec.substr(2,2)
-    }
-
-    let res = []
-    kecamatan.value.map((mk) => {
-        if (mk.value === isKec) {
-            kecamatanSelected.value = {
-                label: mk.label,
-                value: mk.value,
-            }
-        }
-    })
-}
 const myDesa = () => {
-    desaSelected.value = {}
+    isDesa.value = {}
+    const kode = auth.kode.toString()
     if (auth.level === 3) {
-        desas.value.map((ds) => {
-            if (parseInt(ds.value) === auth.kode) {
-                desaSelected.value = {
+        desas.value.some((ds) => {
+            if (ds.value === auth.kode) {
+                isDesa.value = {
                     label: ds.label,
                     value: ds.value
                 }
+                return true
             }
         })
     }
 }
-myKecamatan()
+// myKecamatan()
 myDesa()
+// console.log('votedata', voteData.value)
 
-const isMobile = () => {
-    let check = false;
-    (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4))) check = true;})(navigator.userAgent||navigator.vendor||window.opera);
-    // console.log('isMobile', check)
-    detectMobile.value = check;
-    return check;
+const getTotal = () => {
+    voteTotal.value = 0
+    voteData.value.map((ps) => {
+        const add = voteTotal.value + parseInt(ps.total_vote)
+        voteTotal.value = add
+    })
+}
+getTotal()
+
+const notps = (data) => {
+    if (data < 10) {
+        return `00${data}`
+    } else if (data > 9 && data < 100) {
+        return `0${data}`
+    } else {
+        return data
+    }
 }
 
-const submitVoteDialog = () => {
+const new_data = async() => {
+    await axios.get('/data-user/get-tps/' + auth.kode.split('-')[0]).then((res) => {
+        if (res.data) {
+            datatps.value = []
+            let default_tps = []
+            res.data.map((tps) => {
+                default_tps.push({
+                    label: notps(tps.no_tps),
+                    value: tps.id,
+                    dpt: tps.total
+                })
+            })
+
+            if (voteData.value.length > 0) {
+                const _uid = []
+                voteData.value.map((vd) => {
+                    _uid.push(vd.dpt_id)
+                })
+                
+                const filter = default_tps.filter((ds) => {
+                    if (!_uid.includes(ds.value)) {
+                        return ds
+                    }
+                })
+                datatps.value = filter
+            }
+        }
+    })
+    form.reset()
+    headerTitle.value = 'Tambah Data'
     form.type = 'new'
-    confirmDialog.value = true
+    desaSelected.value = []
+    initPaslon()
+    form.voteInvalid = 0
+    jumlahDPT.value = null
+    tpsSelected.value = {}
+    // desa_existing()
+    addDialog.value = true
 }
 
-const submitVoteDesa = () => {
-    const initVote  = votingPoint.value
-    const invalid   = invalidVote.value
-    form.kec        = auth.kode.toString().substr(2,2)
-    form.desa       = auth.kode.toString()
-    form.desaName   = desaSelected.value.label
-    form.voteValid  = JSON.stringify(votingPoint.value)
-    form.voteInvalid = invalidVote.value
+const desa_existing = () => {
+    if (voteData.value.length > 0) {
+        const _uid = []
+        voteData.value.map((vd) => {
+            _uid.push(vd.desakel_id)
+        })
+        
+        const filter = desas.value.filter((ds) => {
+            if (!_uid.includes(ds.value)) {
+                return ds
+            }
+        })
+        desas.value = filter
+    }
+}
+
+const checkDesa = () => {
+    if (tpsSelected.value) {
+        errorDesa.value = ''
+        jumlahDPT.value = tpsSelected.value.dpt
+        return true
+    } else {
+        errorDesa.value = 'Mohon untuk memilih TPS dahulu'
+        return false
+    }
+}
+
+const submit = () => {
+    const initVote  = dataPaslon.value
+    const isInvalid = form.voteInvalid
+    const kode      = auth.kode.toString()
+    form.dpt        = tpsSelected.value.value
+    form.kec        = kode.substr(2,2)
+    form.desa       = kode
+    form.desaName   = isDesa.value.label
+    form.voteValid  = JSON.stringify(dataPaslon.value)
+    // form.voteInvalid = invalidVote.value
+    form.tps        = tpsSelected.value.label
     form.totalVote  = totalVote()
     form.user       = auth.uuid
     form.type       = 'new'
 
-    // console.log(votingPoint.value)
+    // console.log(form)
+    confirmDialog.value = false
     submitted.value = true
     form.post('/suara-masuk/tambah-data', {
         resetOnSuccess: true,
         onSuccess: (res) => {
-            console.log('res', res)
             const messages = res.props.flash.message
             initData()
             alert_response(messages)
-            initVote.map((iv) => {
-                const datavote = {
-                    uuid: iv.uuid,
-                    kec: kecamatanSelected.value.value,
-                    desa: desaSelected.value.value,
-                    vote: iv.point,
+            if (messages.status === 'success') {
+                initVote.map((iv) => {
+                    const data = {
+                        uuid: iv.uuid,
+                        kec: kode.substr(2,2),
+                        desa: kode,
+                        tps: tpsSelected.value.value,
+                        vote: iv.point,
+                    }
+                    sendingSocket(data)
+                })
+                if (isInvalid > 0) {
+                    const data = {
+                        uuid: 'invalid',
+                        kec: kode.substr(2,2),
+                        desa: kode,
+                        tps: tpsSelected.value.value,
+                        vote: isInvalid,
+                    }
+                    sendingSocket(data)
                 }
-                // console.log('data', datavote)
-                sendingSocket(datavote)
-            })
-            if (invalid && invalid > 0) {
-                const datas = {
-                    uuid: 'invalid',
-                    kec: kecamatanSelected.value.value,
-                    desa: desaSelected.value.value,
-                    vote: invalid,
-                }
-                sendingSocket(datas)
-                // console.log('invalid', datas)
+                getTotal()
+                addDialog.value = false
             }
-            inputStatus.value = true
-            confirmDialog.value = false
+
             submitted.value = false
         },
         onError: () => {
@@ -263,12 +347,24 @@ const submitVoteDesa = () => {
     })
 }
 
+const submitVoteDialog = () => {
+    form.type = 'new'
+    if (checkDesa() && totalVote() > 0) {
+        confirmDialog.value = true
+    } else {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Mohon untuk mengisi semua field', life: 3000 });
+    }
+}
+
 const totalVote = () => {
     let point = 0
-    votingPoint.value.map((vp) => {
-        point = point+parseInt(vp.point)
-    })
-    return point+parseInt(invalidVote.value)
+    if (dataPaslon.value) {
+        dataPaslon.value.map((vp) => {
+            point = point+parseInt(vp.point)
+        })
+        
+    }
+    return (point + parseInt(form.voteInvalid))
 }
 
 const checkPwd = async() => {
@@ -276,18 +372,14 @@ const checkPwd = async() => {
     if (myPassword.value) {
         await axios.get('/suara-masuk/cek-pwd/' + btoa(myPassword.value)).then((res) => {
             if (res.data.status === 200) {
-                inputStatus.value = false
+                headerTitle.value = 'Update TPS ' + notps(dataEdit.value.no_tps)
                 submitted.value = false
                 confirmDialog.value = false
+                editData()
+                addDialog.value = true
                 form.type = 'update'
-                editLabel.value.label = 'Update'
-                editLabel.value.icon = 'pi pi-save'
             } else if (res.data.status === 401) {
-                inputStatus.value = true
                 submitted.value = false
-                editLabel.value.label = 'Edit Data'
-                editLabel.value.icon = 'pi pi-pencil'
-                myPassword.value = ''
                 toast.add({ severity: 'error', summary: 'Peringatan', detail: 'Password tidak sesuai', life: 3000 });
             }
         })
@@ -297,26 +389,67 @@ const checkPwd = async() => {
     }
 }
 
-const cancelUpdateDesa = () => {
-    inputStatus.value = true
-    editLabel.value.label = 'Edit Data'
-    editLabel.value.icon = 'pi pi-pencil'
-    votingPoint.value = JSON.parse(datas.mydata[0].vote_sah)
-    invalidVote.value = datas.mydata[0].vote_tidaksah
-    form.type = 'edit'
+const editVoteDialog = (data,type) => {
+    form.type = type
+    dataEdit.value = data
+    myPassword.value = null
+    dataPaslon.value = JSON.parse(data.vote_sah)
+    confirmDialog.value = true
+    console.log('edit', dataEdit.value)
 }
 
-const checkDiffVote = (newest) => {
-    const def = JSON.parse(datas.mydata[0].vote_sah)
-    def.map((d, i) => {
+const editData = async() => {
+    await axios.get('/data-user/get-tps/' + auth.kode.split('-')[0]).then((res) => {
+        if (res.data) {
+            datatps.value = []
+            res.data.map((tps) => {
+                datatps.value.push({
+                    label: notps(tps.no_tps),
+                    value: tps.id,
+                    dpt: tps.total
+                })
+            })
+        }
+    })
+
+    form.id         = dataEdit.value.id
+    form.uuid       = dataEdit.value.uuid_vote
+    form.dpt        = dataEdit.value.dpt_id
+    form.kec        = dataEdit.value.kec_id
+    form.desa       = dataEdit.value.full_id
+    form.desaName   = dataEdit.value.desakel_name
+    form.tps        = dataEdit.value.no_tps
+    // form.voteValid  = JSON.stringify(dataEdit.value.vote_sah)
+    // form.voteValid  = dataEdit.value.valid
+    form.voteInvalid = dataEdit.value.vote_tidaksah
+    form.user       = auth.uuid
+    form.type       = 'update'
+
+    invalidVote.value = dataEdit.value.vote_tidaksah
+    votingPoint.value = dataEdit.value.vote_sah
+    tpsSelected.value = {
+        label: notps(dataEdit.value.no_tps),
+        value: dataEdit.value.dpt_id,
+        dpt: dataEdit.value.total
+    }
+    jumlahDPT.value = dataEdit.value.total
+}
+
+const checkDiffVote = () => {
+    const old = JSON.parse(votingPoint.value)
+    console.log('old', votingPoint.value)
+    const newest = dataPaslon.value
+    console.log('new', dataPaslon.value)
+    const kode = auth.kode.toString()
+    old.map((d, i) => {
         if (d.point === newest[i].point) {
             console.log('same')
         } else {
             const diff = parseInt(newest[i].point) - parseInt(d.point)
             const data = {
                 uuid: d.uuid,
-                kec: kecamatanSelected.value.value,
-                desa: desaSelected.value.value,
+                kec: kode.substr(2,2),
+                desa: kode,
                 vote: diff,
             }
             updateSocket(data)
@@ -325,52 +458,45 @@ const checkDiffVote = (newest) => {
 }
 
 const checkInvalidDiff = () => {
-    const old  = parseInt(datas.mydata[0].vote_tidaksah)
-    const diff = parseInt(invalidVote.value) - old
+    const old  = parseInt(dataEdit.value.vote_tidaksah)
+    const diff = parseInt(form.voteInvalid) - old
+    const kode = auth.kode.toString()
+    // console.log(old, diff)
     if (diff !== 0) {
         const data = {
             uuid: 'invalid',
-            kec: kecamatanSelected.value.value,
-            desa: desaSelected.value.value,
+            kec: kode.substr(2,2),
+            desa: kode,
             vote: diff,
         }
         updateSocket(data)
     }
 }
 
-const updateVoteDialog = (type) => {
-    form.type = type
-    myPassword.value = null
+const updateVote = () => {    
     confirmDialog.value = true
 }
 
 const updateVoteDesa = () => {
-    submitted.value = true
-    const newVote   = votingPoint.value
-    form.id         = datas.mydata[0]?.id
-    form.uuid       = datas.mydata[0]?.uuid_vote
-    form.kec        = auth.kode.toString().substr(2,2)
-    form.desa       = auth.kode.toString()
-    form.desaName   = desaSelected.value.label
-    form.voteValid  = JSON.stringify(votingPoint.value)
-    form.voteInvalid = invalidVote.value
-    form.totalVote  = totalVote()
-    form.user       = auth.uuid
-    form.type       = 'update'
-
-    // console.log('update', form)
-    checkDiffVote(newVote)
+    checkDiffVote()
     checkInvalidDiff()
+
+    confirmDialog.value = false
+    submitted.value = true
+    form.voteValid  = JSON.stringify(dataPaslon.value)
+    form.totalVote  = totalVote()
+    console.log(form)
     form.post('/suara-masuk/tambah-data', {
         resetOnSuccess: true,
         onSuccess: (res) => {
             const messages = res.props.flash.message
             initData()
             alert_response(messages)
-            inputStatus.value = true
-            confirmDialog.value = false
+            if (messages.status === 'success') {
+                // form.type = null
+                addDialog.value = false
+            }
             submitted.value = false
-            form.type = 'edit'
         },
         onError: () => {
             toast.add({ severity: 'error', summary: 'Peringatan', detail: 'Input data tidak sesuai', life: 3000 });
@@ -386,107 +512,127 @@ const alert_response = (rsp) => {
         toast.add({ severity: 'success', summary: 'Berhasil', detail: rsp.msg, life: 3000 });
     }
 }
+
+const formatNumber = (num) => {
+    const value = parseInt(num)
+    if (value) return value.toLocaleString({ style: 'number' })
+    return 0
+}
 </script>
 
 <template>
     <Head title="Suara Masuk" />
 
     <div>
-        <h3 class="mb-5">Input Suara Masuk <span v-if="!detectMobile">{{ auth.level === 2 ? 'Kecamatan' : 'Desa/Kel.' }} {{ auth.level === 2 ? findKecamatan(auth.kode.toString()) : (auth.level === 3 ? (findDesa(auth.kode.toString())+', '+findKecamatan(auth.kode.toString().substr(2,2))) : '') }}</span></h3>
-        <h3 v-if="detectMobile" class="-mt-7">{{ auth.level === 2 ? 'Kecamatan' : 'Desa/Kel.' }} {{ auth.level === 2 ? findKecamatan(auth.kode.toString()) : (auth.level === 3 ? (findDesa(auth.kode.toString())+', '+findKecamatan(auth.kode.toString().substr(2,2))) : '') }}</h3>
+        <h3 class="mb-5">Input suara masuk Desa/Kel {{ datas.role.text }}</h3>
 
-        <!-- <div class="flex flex-col md:flex-row md:w-8/12 w-full mb-5" v-if="auth.level === 7">
-            <label for="kecamatan" class="md:w-5/12">Kecamatan</label>
-            <InputGroup>
-                <InputGroupAddon>
-                    <i class="pi pi-map-marker"></i>
-                </InputGroupAddon>
-                <Select id="kecamatan" v-model="kecamatanSelected" :options="kecamatan" optionLabel="label" placeholder="Pilih Kecamatan" required="true" fluid :disabled="true"></Select>
-            </InputGroup>
-        </div>
-        <div class="flex flex-col md:flex-row md:w-8/12 w-full mb-5" v-if="auth.level === 7">
-            <label for="desa" class="md:w-5/12">Desa/Kelurahan</label>
-            <InputGroup>
-                <InputGroupAddon>
-                    <i class="pi pi-map-marker"></i>
-                </InputGroupAddon>
-                <Select id="desa" v-model="desaSelected" :options="desas" optionLabel="label" placeholder="Pilih Desa" required="true" fluid :disabled="true"></Select>
-            </InputGroup>
+        <!-- <div class="mb-5">
+            <Button label="Tambah Data" icon="pi pi-plus-circle" @click="submitVoteDialog" />
         </div> -->
-
-        <div v-if="auth.level === 3 && !detectMobile">
-            <div class="w-full gap-6">
-                <div class="mb-5" v-for="(psl, idx) in paslons">
-                    <h5 class="md:w-6/12 -mb-0">{{ psl.nama_paslon }}</h5>
-                    <IconField class="md:w-10/12">
-                        <InputIcon class="pi pi-envelope" />
-                        <InputNumber placeholder="Jumlah voting" v-model="votingPoint[idx].point" class="md:w-6/12" :autofocus="idx === 0 && !inputStatus" :disabled="inputStatus" />
-                    </IconField>
-                </div>
-                <div class="mb-5">
-                    <h5 class="md:w-6/12 -mb-0 text-red-500">Suara Tidak Sah</h5>
-                    <IconField class="md:w-10/12">
-                        <InputIcon class="pi pi-envelope" />
-                        <InputNumber placeholder="Jumlah voting" v-model="invalidVote" class="md:w-6/12" invalid :disabled="inputStatus" />
-                    </IconField>
-                </div>
-            </div>
-            <div class="">
-                <Button label="Simpan" icon="pi pi-save" @click="submitVoteDialog" :disabled="submitted" v-if="datas.mydata.length < 1" />
-                <!-- <Button :label="editLabel.label" :icon="editLabel.icon" @click="updateVoteDialog" :disabled="submitted" v-if="datas.mydata.length > 0" /> -->
-                    <Button label="Edit Data" icon="pi pi-pencil" @click="updateVoteDialog('edit')" :disabled="submitted" v-if="datas.mydata.length > 0 && form.type !== 'update'" />
-                        <Button label="Update Data" icon="pi pi-save" @click="updateVoteDialog('update')" :disabled="submitted" v-if="datas.mydata.length > 0 && form.type === 'update'" />
-                <Button label="Batalkan" icon="pi pi-times" class="ml-5" severity="warn" @click="cancelUpdateDesa" :disabled="submitted" v-if="(datas.mydata.length > 0 && !inputStatus)" />
-            </div>
+        <div class="card">
+            <div class="font-semibold text-xl mb-4">Jumlah suara masuk {{ formatNumber(voteTotal) }} dari {{ formatNumber(datas.sumDPT) }} ({{ ((voteTotal/datas.sumDPT) * 100).toFixed(2) }}%)</div>
+            <DataTable v-model:expandedRows="expandedRows" :value="voteData" ref="dt" dataKey="id" tableStyle="min-width: 60rem">
+                <template #header>
+                    <div class="flex flex-wrap justify-start gap-2">
+                        <Button label="Tambah Data" icon="pi pi-plus-circle" @click="new_data" />
+                    </div>
+                    <div class="flex flex-wrap justify-end gap-2">
+                        <Button text icon="pi pi-plus" label="Buka Semua" @click="expandAll" />
+                        <Button text icon="pi pi-minus" label="Tutup Semua" @click="collapseAll" />
+                    </div>
+                </template>
+                <Column expander style="width: 5rem" header="Detail" />
+                <Column field="no_tps" header="Nomor TPS">
+                    <template #body="slotProps">
+                        TPS {{ notps(slotProps.data.no_tps) }}
+                    </template>
+                </Column>
+                <Column field="" header="Suara Sah">
+                    <template #body="slotProps">
+                        {{ (slotProps.data.total_vote - parseInt(slotProps.data.vote_tidaksah)) }}
+                    </template>
+                </Column>
+                <Column field="vote_tidaksah" header="Suara Tidak Sah"></Column>
+                <Column field="total_vote" header="Total Suara">
+                    <template #body="slotProps">
+                        <b>
+                            <Tag 
+                                :value="slotProps.data.total_vote + ' Suara (' + ((slotProps.data.total_vote / slotProps.data.total) * 100).toFixed(0) + '%)'" 
+                                :severity="((slotProps.data.total_vote / slotProps.data.total) * 100) === 100 ? 'success' : 'warn'" 
+                            />
+                            <!-- {{ (slotProps.data.total_vote) }} suara ({{ ((slotProps.data.total_vote / slotProps.data.total) * 100).toFixed(0) }}%) -->
+                        </b>
+                    </template>
+                </Column>
+                <Column field="total" header="Jumlah DPT">
+                    <template #body="slotProps">
+                        <b>{{ (slotProps.data.total) }}</b>
+                    </template>
+                </Column>
+                <Column :exportable="false" style="min-width: 3rem" header="Edit">
+                    <template #body="slotProps">
+                        <Button icon="pi pi-pencil" outlined rounded v-tooltip.bottom="'Edit TPS ' + notps(slotProps.data.no_tps)" class="mr-2" @click="editVoteDialog(slotProps.data, 'edit')" />
+                    </template>
+                </Column>
+                <template #expansion="slotProps">
+                    <div class="p-4">
+                        <h5>Detail TPS {{ notps(slotProps.data.no_tps) }}</h5>
+                        <DataTable :value="JSON.parse(slotProps.data.vote_sah)">
+                            <Column field="name" header="Paslon"></Column>
+                            <Column field="point" header="Jumlah Suara"></Column>
+                        </DataTable>
+                    </div>
+                </template>
+            </DataTable>
         </div>
-        <div v-if="auth.level === 3 && detectMobile">
-            <div class="w-full gap-6">
-                <div class="mb-5" v-for="(psl, idx) in paslons">
-                    <h5 class="md:w-6/12 -mb-0">{{ psl.nama_paslon }}</h5>
-                    <IconField class="md:w-10/12">
-                        <InputIcon class="pi pi-envelope" />
-                        <InputNumber placeholder="Jumlah voting" v-model="votingPoint[idx].point" fluid class="md:w-6/12" :autofocus="idx === 0 && !inputStatus" inputStyle="height:55px; font-size: 24px; font-weight: bold;" :disabled="inputStatus" />
-                    </IconField>
-                </div>
-                <div class="mb-5">
-                    <h5 class="md:w-6/12 -mb-0 text-red-500">Suara Tidak Sah</h5>
-                    <IconField class="md:w-10/12">
-                        <InputIcon class="pi pi-envelope" />
-                        <InputNumber placeholder="Jumlah voting" v-model="invalidVote" fluid class="md:w-6/12" invalid inputStyle="height:55px; font-size: 24px; font-weight: bold;" :disabled="inputStatus" />
-                    </IconField>
-                </div>
-            </div>
-            <div class="mt-10 flex flex-row w-full justify-between py-3">
-                <Button label="Simpan" icon="pi pi-save" @click="submitVoteDialog" :disabled="submitted" v-if="datas.mydata.length < 1" size="large" class="w-5/12" />
-                <Button label="Edit Data" icon="pi pi-pencil" @click="updateVoteDialog('edit')" :disabled="submitted" v-if="datas.mydata.length > 0 && form.type !== 'update'" size="large" class="w-5/12" />
-                <Button label="Update Data" icon="pi pi-save" @click="updateVoteDialog('update')" :disabled="submitted" v-if="datas.mydata.length > 0 && form.type === 'update'" size="large" class="w-5/12" />
-                <Button label="Batalkan" icon="pi pi-times" class="w-5/12" severity="danger" @click="cancelUpdateDesa" :disabled="submitted" v-if="(datas.mydata.length > 0 && !inputStatus)" size="large" />
-            </div>
-        </div>
-
 
         <Dialog v-model:visible="confirmDialog" :style="{ width: '450px' }" header="Konfirmasi" :modal="true" :closable="false" >
-            <div class="flex items-center gap-4" v-if="form.type === 'new' || (form.type === 'update' || !inputStatus)">
+            <div class="flex items-center gap-4" v-if="form.type === 'new' || (form.type === 'update')">
                 <i class="pi pi-exclamation-triangle !text-3xl" />
                 <span>Anda sudah yakin dengan data yang Anda input?</span
                 >
             </div>
-            <div class="w-full justify-items-center items-center text-center align-center mt-5 mb-5" v-if="form.type === 'edit' && inputStatus">
+            <div class="w-full justify-items-center items-center align-middle mt-5 mb-5" v-if="form.type === 'edit'">
                 <i class="pi pi-lock !text-3xl w-full text-center mb-5" />
                 <label class="w-full">Masukkan Password Anda untuk konfirmasi :</label>
-                <Password placeholder="Password Anda" v-model="myPassword" :autofocus="form.type === 'edit' && inputStatus" :toggleMask="true" :feedback="false" fluid class="text-center mt-3 w-[22em]" v-on:keyup.enter="checkPwd" :disabled="submitted" />
-                <!-- <InputGroup class="w-full justify-items-center mt-5">
-                    <InputGroupAddon>
-                        <i class="pi pi-lock"></i>
-                    </InputGroupAddon>
-                    <Password placeholder="Password Anda" v-model="myPassword" :autofocus="form.type === 'edit' && inputStatus" :toggleMask="true" :feedback="false" fluid class="md:w-8/12" :disabled="submitted" />
-                </InputGroup> -->
+                <Password placeholder="Password Anda" v-model="myPassword" :autofocus="form.type === 'edit'" :toggleMask="true" :feedback="false" fluid class="text-center mt-3 w-[22em]" v-on:keyup.enter="checkPwd" :disabled="submitted" />
             </div>
             <template #footer>
                 <Button label="Tutup" icon="pi pi-times" text @click="confirmDialog = false" :disabled="submitted" />
-                <Button label="Ya, Konfirmasi" icon="pi pi-check" @click="submitVoteDesa" :disabled="submitted" v-if="form.type === 'new'" />
-                <Button label="Ya, Konfirmasi Update" icon="pi pi-check" @click="updateVoteDesa" :disabled="submitted" v-if="!inputStatus && form.type === 'update'" />
+                <Button label="Ya, Konfirmasi" icon="pi pi-check" @click="submit" :disabled="submitted" v-if="form.type === 'new'" />
+                <Button label="Ya, Konfirmasi Update" icon="pi pi-check" @click="updateVoteDesa" :disabled="submitted" v-if="form.type === 'update'" />
                 <Button label="Konfirmasi" icon="pi pi-key" @click="checkPwd" :disabled="submitted" v-if="form.type === 'edit' && inputStatus" />
+            </template>
+        </Dialog>
+
+        <Dialog v-model:visible="addDialog" :style="{ width: '450px' }" :header="headerTitle" :modal="true" :closable="false" >
+            <div class="flex flex-col gap-6">
+                <div>
+                    <label for="desakel" class="block font-bold">Nomor TPS</label>
+                    <Select id="desakel" v-model="tpsSelected" :options="datatps" optionLabel="label" placeholder="Pilih Nomor TPS" required="true" @blur="checkDesa" @change="checkDesa" :invalid="errorDesa.length > 0" fluid :disabled="submitted || form.type === 'update'"></Select>
+                </div>
+                <div class="-mt-10" v-if="errorDesa.length">
+                    <label for="" class="font-semibold w-24">&nbsp;</label>
+                    <Message severity="error" class="">{{ errorDesa }}</Message>
+                </div>
+                <div v-if="jumlahDPT">
+                    <label for="jml_dpt"><i>Jumlah DPT : {{ jumlahDPT }}</i></label>
+                </div>
+                <div class="grid grid-cols-1">
+                    <div class="mb-5" v-for="(psl, p) in paslons">
+                        <label for="name" class="block font-bold">{{ psl.nama_paslon }}</label>
+                        <InputNumber :id="`name_${psl.uuid_paslon}`" v-model="dataPaslon[p].point" required="true" :min="0" :max="100000" placeholder="0" fluid :disabled="submitted" />
+                    </div>
+                    <div class="mb-10">
+                        <label for="name" class="block font-bold">Suara Tidak Sah</label>
+                        <InputNumber id="invalid" v-model="form.voteInvalid" required="true" :min="0" :max="100000" placeholder="0" fluid :disabled="submitted" />
+                    </div>
+                </div>
+            </div>
+            <template #footer>
+                <Button label="Batal" icon="pi pi-times" text @click="addDialog = false" :disabled="submitted" />
+                <Button label="Simpan" icon="pi pi-check" @click="submitVoteDialog" :disabled="submitted" v-if="form.type === 'new'" />
+                <Button label="Update" icon="pi pi-save" @click="updateVote" :disabled="submitted" v-if="form.type === 'update'" />
             </template>
         </Dialog>
     </div>

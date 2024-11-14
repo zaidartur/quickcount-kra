@@ -43,6 +43,30 @@ class Data extends Model
         return $data->orderBy('dd.desakel_id')->get();
     }
 
+    public function data_tps_desa($desa)
+    {
+        return DB::table('data_dpt')->where('full_id', $desa)->get();
+    }
+
+    public function sum_dpt()
+    {
+        $level = Auth::user()->level;
+        $data  = DB::table('data_dpt as dpt');
+        if ($level == 2) {
+            $data->where('dpt.kec_id', Auth::user()->kode);
+        }
+        if ($level == 3) {
+            $data->where('dpt.full_id', Auth::user()->kode);
+            $data->orderBy('dpt.no_tps', 'asc');
+        }
+        if ($level == 4) {
+            $kode = explode('-', Auth::user()->kode);
+            $data->where('dpt.id', $kode[1]);
+            $data->orderBy('dpt.no_tps', 'asc');
+        }
+        return $data->sum('total');
+    }
+
     public function data_dpt()
     {
         $level = Auth::user()->level;
@@ -55,6 +79,12 @@ class Data extends Model
         }
         if ($level == 3) {
             $data->where('dpt.full_id', Auth::user()->kode);
+            $data->orderBy('dpt.no_tps', 'asc');
+        }
+        if ($level == 4) {
+            $kode = explode('-', Auth::user()->kode);
+            $data->where('dpt.id', $kode[1]);
+            $data->orderBy('dpt.no_tps', 'asc');
         }
         return $data->get();
     }

@@ -131,11 +131,6 @@ const detailData = async(prop) => {
     <div>
         <div class="card">
             <Toolbar class="mb-6" v-if="auth.level < 2">
-                <!-- <template #start>
-                    <Button label="Baru" icon="pi pi-plus" severity="success" class="mr-2" @click="openNew" />
-                    <Button label="Hapus" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected" :disabled="!desaTerpilih || !desaTerpilih.length" />
-                </template> -->
-
                 <template #end>
                     <!-- <Button label="Import" icon="pi pi-download" severity="success" class="mr-2" @click="openNew" outlined /> -->
                     <Button label="Export" icon="pi pi-upload" severity="primary" @click="exportCSV($event)" :disabled="desa.length > 0 ? false : true" outlined />

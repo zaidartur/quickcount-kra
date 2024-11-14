@@ -88,9 +88,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [UserController::class, 'view'])->name('users');
         Route::get('/detail-user/{uid}', [UserController::class, 'detail_user']);
         Route::get('/cek-email/{mail}', [UserController::class, 'check_email']);
+        Route::get('/get-tps/{desa}', [UserController::class, 'get_tps'])->name('users.tps');
 
         Route::post('/tambah-user', [UserController::class, 'add_user'])->name('users.add');
         Route::post('/password-user', [UserController::class, 'change_pwd_user'])->name('users.pwd');
+        // Route::post('/get-tps', [UserController::class, 'get_tps'])->name('users.tps');
         Route::post('/hapus-user', [UserController::class, 'delete_user'])->name('users.delete');
     });
 

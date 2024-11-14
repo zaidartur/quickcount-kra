@@ -29,12 +29,15 @@ const pemilih = ref(new Array())
 const kecamatan = ref(new Array())
 const desa = ref(new Array())
 const selectDesa = ref(new Array())
+const rekapDpt = ref(0)
 
 const initData = () => {
     if (datas.dpt.length > 0) {
         pemilih.value = []
         datas.dpt.map((val, i) => {
+            const total = val.total + rekapDpt.value
             pemilih.value.push(val);
+            rekapDpt.value = total
         }) 
     } else {
         pemilih.value = []
@@ -381,6 +384,16 @@ function formatNumber(value) {
     return
 }
 
+const notps = (data) => {
+    if (data < 10) {
+        return `00${data}`
+    } else if (data > 9 && data < 100) {
+        return `0${data}`
+    } else {
+        return data
+    }
+}
+
 const alert_response = (rsp) => {
     if (rsp.status === 'error') {
         toast.add({ severity: 'error', summary: 'Error', detail: rsp.msg, life: 3000 });
@@ -426,7 +439,7 @@ const displayDuplicate = (event, data) => {
             >
                 <template #header>
                     <div class="flex flex-wrap gap-2 items-center justify-between">
-                        <h4 class="m-0">Daftar Pemilih Tetap</h4>
+                        <h4 class="m-0">Daftar Pemilih Tetap ({{ formatNumber(rekapDpt) }} Jiwa)</h4>
                         <IconField>
                             <InputIcon>
                                 <i class="pi pi-search" />
@@ -439,6 +452,11 @@ const displayDuplicate = (event, data) => {
                 <Column selectionMode="multiple" style="width: 3rem" :exportable="false" v-if="auth.level < 2"></Column>
                 <Column field="kec_name" header="Kecamatan" sortable style="min-width: 12rem"></Column>
                 <Column field="desakel_name" header="Desa/Kelurahan" sortable style="min-width: 16rem"></Column>
+                <Column field="" header="No TPS" sortable style="min-width: 16rem">
+                    <template #body="slotProps">
+                        {{ notps(slotProps.data.no_tps) }}
+                    </template>
+                </Column>
                 <Column field="tahun_dpt" header="Tahun" sortable style="min-width: 16rem"></Column>
                 <Column field="total" header="Jumlah DPT" sortable style="min-width: 16rem">
                     <template #body="slotProps">

@@ -29,6 +29,7 @@ const accountLists = ref(new Array())
 const kecamatan = ref(new Array())
 const desa = ref(new Array())
 const selectDesa = ref(new Array())
+const selectTPS = ref(new Array())
 
 const initData = () => {
     accountLists.value = []
@@ -92,6 +93,7 @@ const dt = ref();
 const accountSelected = ref([])
 const kecamatanSelected = ref()
 const desaSelected = ref()
+const tpsSelected = ref([])
 const levelSelected = ref([])
 const headerTitle = ref('Tambah User')
 const addDialog = ref(false)
@@ -103,6 +105,7 @@ const closableModal = ref(false)
 
 const errorKec = ref('')
 const errorDesa = ref('')
+const errorTPS = ref('')
 const errorName = ref('')
 const errorEmail = ref('')
 const errorPwd = ref('')
@@ -134,15 +137,22 @@ if (auth.level < 2) {
         {label: 'Admin', value: 1},
         {label: 'Admin Kecamatan', value: 2},
         {label: 'Admin Desa/Kelurahan', value: 3},
+        {label: 'Admin TPS', value: 4},
     ]
 } else if (auth.level === 2) {
     roles.value = [
         {label: 'Admin Kecamatan', value: 2},
         {label: 'Admin Desa/Kelurahan', value: 3},
+        {label: 'Admin TPS', value: 4},
     ]
 } else if (auth.level === 3) {
     roles.value = [
         {label: 'Admin Desa/Kelurahan', value: 3},
+        {label: 'Admin TPS', value: 4},
+    ]
+} else if (auth.level === 4) {
+    roles.value = [
+        {label: 'Admin TPS', value: 4},
     ]
 }
 
@@ -151,6 +161,7 @@ const roleLabel = [
     {label: 'Admin', value: 1},
     {label: 'Admin Kecamatan', value: 2},
     {label: 'Admin Desa', value: 3},
+    {label: 'Admin TPS', value: 4},
 ]
 
 const isRole = (val) => {
@@ -281,6 +292,21 @@ const checkDesa = () => {
     }
 }
 
+const checkTPS = () => {
+    if (levelSelected.value.value === 4) {
+        if(tpsSelected.value) {
+            errorTPS.value = ''
+            return true
+        } else {
+            errorTPS.value = 'Nomor TPS belum dipilih'
+            return false
+        }
+    } else {
+        errorTPS.value = ''
+        return true
+    }
+}
+
 const checkPwd = () => {
     if (form.type === 'new') {
         if (form.pass) {
@@ -366,12 +392,46 @@ const findByValue = (val, objects) => {
     return data
 }
 
+const notps = (data) => {
+    if (data < 10) {
+        return `00${data}`
+    } else if (data > 9 && data < 100) {
+        return `0${data}`
+    } else {
+        return data
+    }
+}
+
+const tps_kecamatan = () => {
+    if (levelSelected.value.value === 4) {
+        selectTPS.value = []
+        tpsSelected.value = {}
+    }
+}
+
+const isTPS = async() => {
+    selectTPS.value = []
+    tpsSelected.value = {}
+    if (desaSelected.value) {
+        await axios.get('/data-user/get-tps/' + desaSelected.value.value).then((res) => {
+            if (res.data) {
+                res.data.map((tps) => {
+                    selectTPS.value.push({
+                        label: notps(tps.no_tps),
+                        value: tps.id
+                    })
+                })
+            }
+        })
+    }
+}
+
 const saveUser = async() => {
     submitted.value = true
-    if (checkName() && validateEmail() && checkLevel() && checkKecamatan() && checkDesa() && checkPwd()) {
+    if (checkName() && validateEmail() && checkLevel() && checkKecamatan() && checkDesa() && checkTPS() && checkPwd()) {
         // init
         const cek  = form.type === 'new' ? await axios.get('/data-user/cek-email/' + form.email).then((res) => { return res.data }) : 'true'
-        form.kode  = (levelSelected.value.value === 2 ? kecamatanSelected.value.value : (levelSelected.value.value === 3 ? desaSelected.value.value : null))
+        form.kode  = (levelSelected.value.value === 2 ? kecamatanSelected.value.value : (levelSelected.value.value === 3 ? desaSelected.value.value : (levelSelected.value.value === 4 ? (desaSelected.value.value+'-'+tpsSelected.value.value) : null)))
         form.level = levelSelected.value.value
         
         // submitting if validated
@@ -415,6 +475,7 @@ const detailUser = (prop) => {
     form.type = 'detail'
     submitted.value = true
     closableModal.value = true
+    console.log(prop)
 }
 
 const editUser = (prop) => {
@@ -461,6 +522,26 @@ const editUser = (prop) => {
             }
         })
         desaSelected.value = findByValue(isKode, selectDesa.value)
+    }
+    if (prop.level === 4) {
+        const isKode = prop.kode.toString()
+        const kec = isKode.substr(2, 2)
+        kecamatanSelected.value = findByValue(kec, kecamatan.value)
+        desa.value.map((ds) => {
+            if (ds.kec_id === kec) {            
+                selectDesa.value.push({
+                    label: ds.desakel_name,
+                    value: ds.full_id
+                })
+            }
+        })
+        desaSelected.value = findByValue(isKode.split('-')[0], selectDesa.value)
+        isTPS()
+        tpsSelected.value = {
+            label: notps(prop.no_tps),
+            value: parseInt(isKode.split('-')[1])
+        }
+        console.log(tpsSelected.value, selectTPS.value)
     }
     
     submitted.value = false
@@ -586,7 +667,7 @@ const alert_response = (rsp) => {
                             <InputIcon>
                                 <i class="pi pi-search" />
                             </InputIcon>
-                            <InputText v-model="filters['global'].value" placeholder="Search..." />
+                            <InputText v-model="filters['global'].value" placeholder="Cari Nama..." />
                         </IconField>
                     </div>
                 </template>
@@ -597,6 +678,7 @@ const alert_response = (rsp) => {
                 <Column field="level" header="Role" sortable style="min-width: 16rem">
                     <template #body="slotProps">
                         {{ isRole(slotProps.data.level) }}
+                        {{ (slotProps.data.level === 2 ? slotProps.data.kec_name : (slotProps.data.level === 3 ? (slotProps.data.desakel_name) : '')) }}
                     </template>
                 </Column>
                 <Column field="created_at" header="Tanggal Buat" sortable style="min-width: 16rem">
@@ -615,7 +697,7 @@ const alert_response = (rsp) => {
             </DataTable>
         </div>
 
-        <Dialog v-model:visible="addDialog" :style="{ width: (form.type === 'detail' ? '900px' : '450px') }" :header="headerTitle" :modal="true" :closable="closableModal" >
+        <Dialog v-model:visible="addDialog" :style="{ width: (form.type === 'detail' ? '900px' : (levelSelected.value === 4 ? '700px' : '500px')) }" :header="headerTitle" :modal="true" :closable="closableModal" >
             <div class="flex flex-col md:flex-row md:w-12/12">
                 <div class="flex flex-col gap-6" :class="(form.type === 'detail' && auth.level < 2) ? 'md:w-5/12 ml-5' : 'md:w-full'">
                     <div>
@@ -639,25 +721,41 @@ const alert_response = (rsp) => {
                     <div class="-mt-4" v-if="errorLevel.length">
                         <Message severity="error" class="">{{ errorLevel }}</Message>
                     </div>
-                    <div class="grid grid-cols-12 gap-4" v-if="(levelSelected.value === 2 || levelSelected.value === 3) && (form.type === 'edit' && form.uuid === auth.uuid ? false : true)">
-                        <div :class="levelSelected.value === 2 ? 'col-span-12' : 'col-span-6'">
-                            <div v-if="levelSelected.value === 2 || levelSelected.value === 3">
+                    <div class="grid grid-cols-12 gap-4" v-if="(levelSelected.value === 2 || levelSelected.value === 3 || levelSelected.value === 4) && (form.type === 'edit' && form.uuid === auth.uuid ? false : true)">
+                        <div 
+                            :class="levelSelected.value === 2 ? 'col-span-12' : (levelSelected.value === 3 ? 'col-span-6' : 'col-span-4')"
+                             v-if="levelSelected.value === 2 || levelSelected.value === 3 || levelSelected.value === 4"
+                        >
+                            <div v-if="levelSelected.value === 2 || levelSelected.value === 3 || levelSelected.value === 4">
                                 <label for="kecamatan" class="block font-bold">Nama Kecamatan</label>
-                                <Select id="kecamatan" v-model="kecamatanSelected" :options="kecamatan" optionLabel="label" placeholder="Pilih Kecamatan" required="true" @change="selectKec" :invalid="errorKec.length > 0" fluid :disabled="submitted"></Select>
+                                <Select id="kecamatan" v-model="kecamatanSelected" :options="kecamatan" optionLabel="label" placeholder="Pilih Kecamatan" required="true" @change="selectKec" @blur="tps_kecamatan" :invalid="errorKec.length > 0" fluid :disabled="submitted"></Select>
                             </div>
                             <div class="-mt-4" v-if="errorKec.length">
                                 <label for="" class="font-semibold w-24">&nbsp;</label>
                                 <Message severity="error" class="">{{ errorKec }}</Message>
                             </div>
                         </div>
-                        <div class="col-span-6">
-                            <div v-if="levelSelected.value === 3">
+                        <div 
+                            :class="levelSelected.value === 3 ? 'col-span-6' : (levelSelected.value === 4 ? 'col-span-4' : '')" 
+                            v-if="levelSelected.value === 3 || levelSelected.value === 4"
+                        >
+                            <div v-if="levelSelected.value === 3 || levelSelected.value === 4">
                                 <label for="desakel" class="block font-bold">Nama Desa/Kelurahan</label>
-                                <Select id="desakel" v-model="desaSelected" :options="selectDesa" optionLabel="label" placeholder="Pilih Desa/Kelurahan" required="true" @change="checkDesa" :invalid="errorDesa.length > 0" fluid :disabled="submitted"></Select>
+                                <Select id="desakel" v-model="desaSelected" :options="selectDesa" optionLabel="label" placeholder="Pilih Desa/Kelurahan" required="true" @change="checkDesa" @blur="isTPS" :invalid="errorDesa.length > 0" fluid :disabled="submitted"></Select>
                             </div>
                             <div class="-mt-4" v-if="errorDesa.length">
                                 <label for="" class="font-semibold w-24">&nbsp;</label>
                                 <Message severity="error" class="">{{ errorDesa }}</Message>
+                            </div>
+                        </div>
+                        <div class="col-span-4" v-if="levelSelected.value === 4">
+                            <div v-if="levelSelected.value === 4">
+                                <label for="tps" class="block font-bold">Nomor TPS</label>
+                                <Select id="tps" v-model="tpsSelected" :options="selectTPS" optionLabel="label" placeholder="Pilih TPS" required="true" @change="checkTPS" :invalid="errorTPS.length > 0" fluid :disabled="submitted"></Select>
+                            </div>
+                            <div class="-mt-4" v-if="errorTPS.length">
+                                <label for="" class="font-semibold w-24">&nbsp;</label>
+                                <Message severity="error" class="">{{ errorTPS }}</Message>
                             </div>
                         </div>
                     </div>

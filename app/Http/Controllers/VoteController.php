@@ -29,7 +29,7 @@ class VoteController extends Controller
 
     public function view()
     {
-        if (Auth::user()->level == 2 || Auth::user()->level == 3) {
+        if (in_array(Auth::user()->level, [2,3,4])) {
             return Inertia::render('Voting', [
                 'apps'   => $this->setting->get_app(),
                 'status' => session('status'),
@@ -37,6 +37,8 @@ class VoteController extends Controller
                 'kec'    => $this->data->data_kecamatan(),
                 'desa'   => $this->data->data_desa(),
                 'mydata' => $this->vote->data_voting(),
+                'profile'=> $this->user->role_profile(),
+                'dpt'    => $this->data->sum_dpt(),
             ]);
         } else {
             return abort(404);
@@ -46,9 +48,11 @@ class VoteController extends Controller
     public function add_voting(Request $request)
     {
         $validated = $request->validate([
+            'dpt'       => 'required',
             'kec'       => 'required',
             'desa'      => 'required',
             'desaName'  => 'required|string',
+            'tps'       => 'required',
             'voteValid' => 'required',
             // 'voteInvalid' => 'required',
             'totalVote' => 'required',
@@ -75,7 +79,7 @@ class VoteController extends Controller
 
     public function save_voting($request)
     {
-        $cek  = $this->vote->check_data($request->desa);
+        $cek  = $this->vote->check_data($request->desa, $request->dpt);
         if (count($cek) > 0) {
             $status = 'error';
             $msg = 'Duplikat data';
@@ -83,13 +87,15 @@ class VoteController extends Controller
             $uuid = Uuid::uuid4()->toString();
             $data = [
                 'uuid_vote'     => $uuid,
+                'dpt_id'        => $request->dpt,
                 'kec_id'        => (strlen($request->kec) < 2 ? ('0'.$request->kec) : $request->kec),
                 'desakel_id'    => $request->desa,
                 'desakel_name'  => $request->desaName,
+                'no_tps'        => intval($request->tps),
                 'vote_sah'      => $request->voteValid,
-                'vote_tidaksah' => $request->voteInvalid ?? 0,
+                'vote_tidaksah' => intval($request->voteInvalid) ?? 0,
                 'tahun_vote'    => date('Y'),
-                'total_vote'    => $request->totalVote,
+                'total_vote'    => intval($request->totalVote),
                 'user'          => $request->user,
                 'created_at'    => date('Y-m-d H:i:s'),
             ];

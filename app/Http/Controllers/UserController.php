@@ -45,6 +45,28 @@ class UserController extends Controller
         }
     }
 
+    public function get_tps($desa)
+    {
+        if ($desa) {
+            return $this->data->data_tps_desa($desa);
+        } else {
+            return null;
+        }
+    }
+
+    public function get_tps_post(Request $request)
+    {
+        $validated = $request->validate([
+            'desa'  => 'required|numeric',
+        ]);
+
+        if ($validated) {
+            return $this->data->data_tps_desa($request->desa);
+        } else {
+            return null;
+        }
+    }
+
     public function add_user(Request $request)
     {
         $validated = $request->validate([

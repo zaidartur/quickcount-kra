@@ -20,8 +20,18 @@ class Vote extends Model
             $res = DB::table('data_voting as dv')->leftJoin('data_kecamatan as dk', 'dk.kec_id', '=', 'dv.kec_id')
                     ->leftJoin('data_desa as dd', 'dd.full_id', '=', 'dv.desakel_id')
                     ->leftJoin('users as u', 'u.uuid', '=', 'dv.user')
-                    ->select('dv.*', 'dk.kec_name', 'dd.desakel_name', 'dd.desakel_id', 'u.name', 'u.level', 'u.kode')
+                    ->leftJoin('data_dpt as dpt', 'dpt.id', '=', 'dv.dpt_id')
+                    ->select('dv.*', 'dk.kec_name', 'dd.desakel_name', 'dd.full_id', 'u.name', 'u.level', 'u.kode', 'dpt.no_tps', 'dpt.total')
                     ->where('dv.desakel_id', Auth::user()->kode)
+                    ->orderBy('dpt.no_tps')
+                    ->get(); 
+        } elseif ($level == 4) {
+            $kode = explode('-', Auth::user()->kode);
+            $res = DB::table('data_voting as dv')->leftJoin('data_kecamatan as dk', 'dk.kec_id', '=', 'dv.kec_id')
+                    ->leftJoin('data_desa as dd', 'dd.full_id', '=', 'dv.desakel_id')
+                    ->leftJoin('users as u', 'u.uuid', '=', 'dv.user')
+                    ->select('dv.*', 'dk.kec_name', 'dd.desakel_name', 'dd.full_id', 'u.name', 'u.level', 'u.kode')
+                    ->where('dv.desakel_id', $kode[0])->where('dpt_id', intval($kode[1]))
                     ->get(); 
         } else {
             $res = [];
@@ -135,9 +145,9 @@ class Vote extends Model
         return ['valid' => $result, 'invalid' => $invalid];
     }
 
-    public function check_data($desa)
+    public function check_data($desa, $dpt)
     {
-        return DB::table('data_voting')->where('desakel_id', $desa)->where('tahun_vote', date('Y'))->get();
+        return DB::table('data_voting')->where('desakel_id', $desa)->where('dpt_id', intval($dpt))->get();
     }
 
     public function save_voting($data)

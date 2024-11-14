@@ -5,6 +5,7 @@
         <th>nama_desa</th>
         <th>kode_kecamatan</th>
         <th>kode_desa</th>
+        <th>nomor_tps</th>
         <th>tahun</th>
         <th>jumlah</th>
     </tr>

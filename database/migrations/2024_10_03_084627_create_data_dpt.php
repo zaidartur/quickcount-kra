@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('kec_id', '10');
             $table->string('desakel_id', '10');
             $table->string('full_id', '10');
+            $table->string('kpu_id', '10');
+            $table->integer('no_tps');
             $table->integer('tahun_dpt');
             $table->integer('total');
             $table->timestamps();
