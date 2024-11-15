@@ -111,6 +111,7 @@ const headerTitle = ref('Tambah Data')
 const errorDesa = ref('')
 const myPassword = ref(null)
 const jumlahDPT = ref(null)
+const rekapInputan = ref(0)
 const invalidVote = ref(
     datas.mydata.length > 0 ? datas.mydata[0].vote_tidaksah : 0
 )
@@ -247,6 +248,8 @@ const new_data = async() => {
                     }
                 })
                 datatps.value = filter
+            } else {
+                datatps.value = default_tps
             }
         }
     })
@@ -505,6 +508,21 @@ const updateVoteDesa = () => {
     })
 }
 
+const sum_suara_masuk = () => {
+    rekapInputan.value = 0
+    dataPaslon.value.map((dp) => {
+        if (dp.point) {
+            const res = rekapInputan.value + parseInt(dp.point)
+            rekapInputan.value = res
+        } else {
+            const res = rekapInputan.value
+            rekapInputan.value = res
+        }
+    })
+    const _total = rekapInputan.value + parseInt(form.voteInvalid)
+    rekapInputan.value = _total
+}
+
 const alert_response = (rsp) => {
     if (rsp.status === 'error') {
         toast.add({ severity: 'error', summary: 'Error', detail: rsp.msg, life: 3000 });
@@ -524,7 +542,7 @@ const formatNumber = (num) => {
     <Head title="Suara Masuk" />
 
     <div>
-        <h3 class="mb-5">Input suara masuk Desa/Kel {{ datas.role.text }}</h3>
+        <h3 class="mb-5">Input suara masuk Desa/Kel. {{ datas.role.text }}</h3>
 
         <!-- <div class="mb-5">
             <Button label="Tambah Data" icon="pi pi-plus-circle" @click="submitVoteDialog" />
@@ -601,7 +619,7 @@ const formatNumber = (num) => {
                 <Button label="Tutup" icon="pi pi-times" text @click="confirmDialog = false" :disabled="submitted" />
                 <Button label="Ya, Konfirmasi" icon="pi pi-check" @click="submit" :disabled="submitted" v-if="form.type === 'new'" />
                 <Button label="Ya, Konfirmasi Update" icon="pi pi-check" @click="updateVoteDesa" :disabled="submitted" v-if="form.type === 'update'" />
-                <Button label="Konfirmasi" icon="pi pi-key" @click="checkPwd" :disabled="submitted" v-if="form.type === 'edit' && inputStatus" />
+                <Button label="Konfirmasi" icon="pi pi-key" @click="checkPwd" :disabled="submitted" v-if="form.type === 'edit'" />
             </template>
         </Dialog>
 
@@ -616,16 +634,16 @@ const formatNumber = (num) => {
                     <Message severity="error" class="">{{ errorDesa }}</Message>
                 </div>
                 <div v-if="jumlahDPT">
-                    <label for="jml_dpt"><i>Jumlah DPT : {{ jumlahDPT }}</i></label>
+                    <label for="jml_dpt">Jumlah DPT : {{ jumlahDPT }} || Jumlah Input Data : {{ formatNumber(rekapInputan) }}</label>
                 </div>
                 <div class="grid grid-cols-1">
                     <div class="mb-5" v-for="(psl, p) in paslons">
                         <label for="name" class="block font-bold">{{ psl.nama_paslon }}</label>
-                        <InputNumber :id="`name_${psl.uuid_paslon}`" v-model="dataPaslon[p].point" required="true" :min="0" :max="100000" placeholder="0" fluid :disabled="submitted" />
+                        <InputNumber :id="`name_${psl.uuid_paslon}`" v-model="dataPaslon[p].point" required="true" :min="0" :max="100000" placeholder="0" fluid @blur="sum_suara_masuk" :disabled="submitted" />
                     </div>
                     <div class="mb-10">
                         <label for="name" class="block font-bold">Suara Tidak Sah</label>
-                        <InputNumber id="invalid" v-model="form.voteInvalid" required="true" :min="0" :max="100000" placeholder="0" fluid :disabled="submitted" />
+                        <InputNumber id="invalid" v-model="form.voteInvalid" required="true" :min="0" :max="100000" placeholder="0" fluid @blur="sum_suara_masuk" :disabled="submitted" />
                     </div>
                 </div>
             </div>

@@ -83,6 +83,7 @@ const initData = () => {
 }
  
 initData() 
+console.log('progress', dataProgress.value)
 const paginator = ref(0)
 const index = ref(0)
 const sideBar = 280
@@ -98,7 +99,8 @@ const clrLabel = ['yellow', 'violet', 'blue', 'orange', 'amber', 'emerald', 'tea
 // }
 
 socket.on('get-paslon', (ps) => {
-    filtered_data.value.some((fd, f) => {
+    console.log('get', ps)
+    dataProgress.value.some((fd, f) => {
         if (fd.kec_id === ps.kec) {
             if (ps.uuid === 'invalid') {
                 fd.invalid = fd.invalid + ps.vote
@@ -115,7 +117,7 @@ socket.on('get-paslon', (ps) => {
 
             // update total suara
             const total = parseInt(fd.total) + ps.vote
-            filtered_data.value[f].total = total
+            dataProgress.value[f].total = total
             totalSeluruhSuara.value = totalSeluruhSuara.value + ps.vote
             return true
         }
@@ -133,15 +135,17 @@ socket.on('get-paslon', (ps) => {
         if (number && number >= 0) {
             chartData.value.datasets[0].data[number] = parseInt(chartData.value.datasets[0].data[number]) + ps.vote
         }
-    }
 
-    // update desa
-    _detailKecamatan(ps.kec)
+        // update data desa
+        _detailKecamatan(ps.kec)
+    }
 })
 
 socket.on('update-paslon', (gp) => {
-    filtered_data.value.some((fd, f) => {
+    console.log('update', gp)
+    dataProgress.value.some((fd, f) => {
         if (fd.kec_id === gp.kec) {
+            console.log('found it in progress')
             if (gp.uuid === 'invalid') {
                 fd.invalid = fd.invalid + gp.vote
                 suaraTidakSah.value = suaraTidakSah.value + gp.vote
@@ -157,8 +161,10 @@ socket.on('update-paslon', (gp) => {
 
             // update total suara
             const total = parseInt(fd.total) + gp.vote
-            filtered_data.value[f].total = total
-            totalSeluruhSuara.value = totalSeluruhSuara.value + gp.vote
+            dataProgress.value[f].total = total
+            const totalSeluruh = totalSeluruhSuara.value + gp.vote
+            totalSeluruhSuara.value = totalSeluruh
+            console.log('updated', fd)
             return true
         }
     })
@@ -166,6 +172,7 @@ socket.on('update-paslon', (gp) => {
     // update on graph
     if (dataDetail.value.kec_id === gp.kec) {
         let number = null
+        console.log('found it in graph modal')
         chartData.value.uuid.some((id, i) => {
             if (id === gp.uuid) {
                 number = i
@@ -196,7 +203,6 @@ socket.on('update-paslon', (gp) => {
             }
         })
     }
-    console.log('update', gp)
 })
 
 const onResize = () => {
@@ -210,6 +216,12 @@ const filtered = (e) => {
 }
 
 function formatNumber(value) {
+    // const num = parseInt(value)
+    // if (num > 0 && num !== undefined) {
+    //     num.toLocaleString({style: 'number'})
+    // } else {
+    //     return 0
+    // }
     if (value) return value.toLocaleString({ style: 'number' })
     return 0
 }
@@ -231,6 +243,7 @@ const mouseOutCard = (e) => {
 const _detail = (val) => {
     headerDetail.value = 'Detail Kecamatan ' + val.kec_name
     dataDetail.value = val
+    console.log('detail', dataDetail.value)
     // chartData.value = setChartData(dataDetail.value)
     setChartData()
     chartOptions.value = setChartOptions()
@@ -332,6 +345,7 @@ const setChartOptions = () => {
         }
     }
 }
+console.log('sah', suaraSah.value)
 </script>
 
 <template>

@@ -27,12 +27,12 @@ onMounted(() => {
     setColorOptions();
 });
 
-// const socket = io('http://localhost:3000', {
-//     withCredentials: true,
-// })
-const socket = io('https://qcws.caturnus.com', {
+const socket = io('http://localhost:3000', {
     withCredentials: true,
 })
+// const socket = io('https://qcws.caturnus.com', {
+//     withCredentials: true,
+// })
 
 const initData = () => {
     dataGrafik.value = []

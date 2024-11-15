@@ -72,12 +72,46 @@ class Statistik extends Model
                 'kec_id'    => $desa->kec_id,
             ];
 
-            if (DB::table('data_voting')->where('tahun_vote', date('Y'))->where('desakel_id', $desa->full_id)->exists()) {
-                $vote = DB::table('data_voting')->where('tahun_vote', date('Y'))->where('desakel_id', $desa->full_id)->first();
+            $tps = DB::table('data_voting')->where('tahun_vote', date('Y'))->where('desakel_id', $desa->full_id)->get();
+            if (count($tps) > 0) {
+                // $vote = DB::table('data_voting')->where('tahun_vote', date('Y'))->where('desakel_id', $desa->full_id)->first();
+                // $res[$d] += [
+                //     'total'     => $vote->total_vote,
+                //     'valid'     => json_decode($vote->vote_sah),
+                //     'invalid'   => $vote->vote_tidaksah,
+                // ];
+                $tps_total = 0;
+                $tps_valid = [];
+                $tps_invalid = 0;
+                foreach ($paslons as $paslon) {
+                    $tps_valid[] = [
+                        'uuid'  => $paslon->uuid_paslon,
+                        'name'  => $paslon->nama_paslon,
+                        'point' => 0,
+
+                    ];
+                }
+
+                foreach ($tps as $key => $value) {
+                    // $vote = DB::table('data_voting')->where('tahun_vote', date('Y'))->where('desakel_id', $desa->full_id)->where('id', $value->id)->first();
+                    $tps_total = $tps_total + intval($value->total_vote);
+                    $tps_invalid = $tps_invalid + intval($value->vote_tidaksah);
+                    $tps_paslon = json_decode($value->vote_sah);
+
+                    foreach ($tps_paslon as $t => $tp) {
+                        foreach ($tps_valid as $v => $tv) {
+                            if ($tp->uuid == $tv['uuid']) {
+                                $sum = intval($tv['point']) + intval($tp->point);
+                                $tps_valid[$v]['point'] = $sum;
+                            }
+                        }
+                    }
+                }
+                // akumulasi
                 $res[$d] += [
-                    'total'     => $vote->total_vote,
-                    'valid'     => json_decode($vote->vote_sah),
-                    'invalid'   => $vote->vote_tidaksah,
+                    'total'     => $tps_total,
+                    'valid'     => $tps_valid,
+                    'invalid'   => $tps_invalid,
                 ];
             } else {
                 $vote = [];
