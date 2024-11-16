@@ -3,7 +3,7 @@ import FloatingConfigurator from '@/Components/FloatingConfigurator.vue';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import { ref } from 'vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Message from 'primevue/message';
@@ -16,7 +16,10 @@ const form = useForm({
 });
 const errText = ref('')
 const errTitle = ref('')
-
+const page = usePage().props
+const apps = page.apps
+const env = page.env
+console.log('login', page)
 const submit = async () => {
     if (form.email.length > 0 && form.password.length > 0) {
         if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(form.email)) {
@@ -72,7 +75,7 @@ const test = () => {
             <div style="border-radius: 56px; padding: 0.3rem; background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%)">
                 <div class="w-full bg-surface-0 dark:bg-surface-900 py-20 px-8 sm:px-20" style="border-radius: 53px">
                     <div class="text-center mb-8">
-                        <svg viewBox="0 0 54 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="mb-8 w-16 shrink-0 mx-auto">
+                        <svg viewBox="0 0 54 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="mb-8 w-16 shrink-0 mx-auto" v-if="apps === undefined || apps.app_logo === null">
                             <path
                                 fill-rule="evenodd"
                                 clip-rule="evenodd"
@@ -89,9 +92,12 @@ const test = () => {
                                 />
                             </g>
                         </svg>
+                        <div v-if="apps.app_logo" class="flex justify-center mb-3">
+                            <img :src="apps.app_logo" style="max-height: 85px;">
+                        </div>                        
                         
-                        <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Welcome to PrimeLand!</div>
-                        <span class="text-muted-color font-medium">Sign in to continue</span>
+                        <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Selamat Datang <span v-if="apps.app_name">di {{ apps.app_name }}</span>!</div>
+                        <span class="text-muted-color font-medium">Silahkan login untuk melanjutkan</span>
                     </div>
 
                     <div>
@@ -109,7 +115,7 @@ const test = () => {
                             </div>
                             <!-- <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Forgot password?</span> -->
                         </div>
-                        <Button label="Sign In" class="w-full" as="router-link" icon="pi pi-sign-out" :class="{ 'opacity-25': form.processing }" :disabled="form.processing" @click="submit"></Button>
+                        <Button label="Login" class="w-full" as="router-link" icon="pi pi-sign-out" :class="{ 'opacity-25': form.processing }" :disabled="form.processing" @click="submit"></Button>
                     </div>
                 </div>
             </div>

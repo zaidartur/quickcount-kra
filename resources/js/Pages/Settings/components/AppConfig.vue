@@ -133,7 +133,8 @@ const alert_response = (rsp) => {
                 <Column header="Nama Aplikasi" style="min-width: 12rem">
                     <template #body="slotProps">
                         <div class="flex items-center">
-                            <img v-if="slotProps.data.app_logo" :src="`${slotProps.data?.app_logo}`" :alt="slotProps.data.app_logo" class="rounded" style="width: 64px" />
+                            <img v-if="slotProps.data.app_logo" :src="`${slotProps.data?.app_logo}`" :alt="slotProps.data.app_logo" class="rounded" style="height: 24px" />
+                            &nbsp;&nbsp;&nbsp;
                             <span><b>{{ slotProps.data.app_name }}</b></span>
                         </div>
                     </template>

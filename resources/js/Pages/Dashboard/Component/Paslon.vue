@@ -34,7 +34,7 @@ initData()
 
 function formatNumber(value) {
     if (value) return value.toLocaleString({ style: 'number' })
-    return
+    return 0
 }
 
 socket.on('get-paslon', (gp) => {
@@ -88,7 +88,7 @@ socket.on('update-paslon', (up) => {
                     <!-- <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"></path></svg> -->
                     <img :src="logo" style="max-width: 40px">
                     </div>
-                <div class="box-label">{{ formatNumber(dp.total) }} Suara ({{ (dp.total / (voteValid+voteInvalid) * 100).toFixed(1) }}%)</div>
+                <div class="box-label">{{ formatNumber(dp.total) }} Suara ({{ (dp.total / (voteValid+voteInvalid) * 100).toFixed(1) ?? 0 }}%)</div>
                 <div class="box-title">{{ dp.urut }} - {{ dp.name }}</div>
                 <div class="box-image">
                     <img :src="dp.foto" alt="profile">
@@ -105,7 +105,7 @@ socket.on('update-paslon', (up) => {
         </div>
 
         <div class="w-full text-center">
-            <label><i>* Suara Tidak Sah : {{ formatNumber(voteInvalid) }} Suara ({{ (voteInvalid / (voteValid+voteInvalid) * 100).toFixed(1) }}%)</i></label>
+            <label><i>* Suara Tidak Sah : {{ formatNumber(voteInvalid) }} Suara ({{ (voteInvalid / (voteValid+voteInvalid) * 100).toFixed(1) ?? 0 }}%)</i></label>
         </div>
     </div>
 
@@ -116,7 +116,8 @@ socket.on('update-paslon', (up) => {
 
 <style lang="scss">
 .box {
-    background: white;
+    // background: white;
+    background: var(--surface-overlay);
     border-radius: 20px;
     display: grid;
     grid-template-columns: 64px 1fr;

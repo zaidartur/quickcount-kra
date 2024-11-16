@@ -263,7 +263,7 @@ const checkLevel = () => {
 }
 
 const checkKecamatan = () => {
-    if (levelSelected.value.value === 2 || levelSelected.value.value === 3) {
+    if (levelSelected.value.value === 2 || levelSelected.value.value === 3 || levelSelected.value.value === 4) {
         if (kecamatanSelected.value) {
             errorKec.value = ''
             return true
@@ -278,7 +278,7 @@ const checkKecamatan = () => {
 }
 
 const checkDesa = () => {
-    if (levelSelected.value.value === 3) {
+    if (levelSelected.value.value === 3 || levelSelected.value.value === 4) {
         if(desaSelected.value) {
             errorDesa.value = ''
             return true
@@ -343,11 +343,27 @@ const selectKec = () => {
     selectDesa.value = []
     
     desa.value.map((tmp) => {
-        if (tmp.kec_id === kecamatanSelected.value.value) {            
-            selectDesa.value.push({
-                label: tmp.desakel_name,
-                value: tmp.full_id
-            })
+        if (auth.level < 3) {
+            if (tmp.kec_id === kecamatanSelected.value.value) {            
+                selectDesa.value.push({
+                    label: tmp.desakel_name,
+                    value: tmp.full_id
+                })
+            }
+        } else if (auth.level === 3) {
+            if (tmp.full_id === auth.kode) {            
+                selectDesa.value.push({
+                    label: tmp.desakel_name,
+                    value: tmp.full_id
+                })
+            }
+        } else {
+            if (tmp.full_id === auth.kode.split('-')[0]) {            
+                selectDesa.value.push({
+                    label: tmp.desakel_name,
+                    value: tmp.full_id
+                })
+            }
         }
     })
 }
@@ -641,9 +657,9 @@ const alert_response = (rsp) => {
     <Head title="Data User" />
     <div>
         <div class="card">
-            <Toolbar class="mb-6" v-if="auth.level < 2">
+            <Toolbar class="mb-6" v-if="auth.level < 4">
                 <template #start>
-                    <Button label="Baru" icon="pi pi-plus" severity="success" class="mr-2" @click="openNew" />
+                    <Button label="Buat Akun Baru" icon="pi pi-plus" severity="success" class="mr-2" @click="openNew" />
                     <!-- <Button label="Hapus" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected" :disabled="dptTerpilih.length < 1" /> -->
                 </template>
             </Toolbar>
@@ -689,9 +705,9 @@ const alert_response = (rsp) => {
                 <Column :exportable="false" style="min-width: 12rem">
                     <template #body="slotProps">
                         <Button icon="pi pi-info" outlined rounded severity="info" class="mr-2" @click="detailUser(slotProps.data)" v-tooltip.bottom="'Detail User'" />
-                        <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="editUser(slotProps.data)" v-tooltip.bottom="'Edit User'" />
-                        <Button icon="pi pi-key" outlined rounded severity="warn" class="mr-2" @click="change_pwd(slotProps.data)" v-tooltip.bottom="'Ubah Password'" />
-                        <Button icon="pi pi-trash" outlined rounded severity="danger" @click="delete_user(slotProps.data)" v-tooltip.bottom="'Hapus User'" v-if="slotProps.data.uuid !== auth.uuid" />
+                        <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="editUser(slotProps.data)" v-tooltip.bottom="'Edit User'" v-if="slotProps.data.uuid === auth.uuid || auth.level < 4" />
+                        <Button icon="pi pi-key" outlined rounded severity="warn" class="mr-2" @click="change_pwd(slotProps.data)" v-tooltip.bottom="'Ubah Password'" v-if="slotProps.data.uuid === auth.uuid || auth.level < 4" />
+                        <Button icon="pi pi-trash" outlined rounded severity="danger" @click="delete_user(slotProps.data)" v-tooltip.bottom="'Hapus User'" v-if="slotProps.data.uuid !== auth.uuid && auth.level < 4" />
                     </template>
                 </Column>
             </DataTable>
@@ -699,7 +715,7 @@ const alert_response = (rsp) => {
 
         <Dialog v-model:visible="addDialog" :style="{ width: (form.type === 'detail' ? '900px' : (levelSelected.value === 4 ? '700px' : '500px')) }" :header="headerTitle" :modal="true" :closable="closableModal" >
             <div class="flex flex-col md:flex-row md:w-12/12">
-                <div class="flex flex-col gap-6" :class="(form.type === 'detail' && auth.level < 2) ? 'md:w-5/12 ml-5' : 'md:w-full'">
+                <div class="flex flex-col gap-6" :class="(form.type === 'detail' && auth.level < 0) ? 'md:w-5/12 ml-5' : 'md:w-full'">
                     <div>
                         <label for="name" class="block font-bold">Nama Lengkap</label>
                         <InputText id="name" v-model="form.name" placeholder="Nama User" required="true" fluid @change="checkName" :invalid="errorName.length > 0" :disabled="submitted" autofocus />
@@ -727,7 +743,7 @@ const alert_response = (rsp) => {
                              v-if="levelSelected.value === 2 || levelSelected.value === 3 || levelSelected.value === 4"
                         >
                             <div v-if="levelSelected.value === 2 || levelSelected.value === 3 || levelSelected.value === 4">
-                                <label for="kecamatan" class="block font-bold">Nama Kecamatan</label>
+                                <label for="kecamatan" class="block font-bold">Kecamatan</label>
                                 <Select id="kecamatan" v-model="kecamatanSelected" :options="kecamatan" optionLabel="label" placeholder="Pilih Kecamatan" required="true" @change="selectKec" @blur="tps_kecamatan" :invalid="errorKec.length > 0" fluid :disabled="submitted"></Select>
                             </div>
                             <div class="-mt-4" v-if="errorKec.length">
@@ -740,7 +756,7 @@ const alert_response = (rsp) => {
                             v-if="levelSelected.value === 3 || levelSelected.value === 4"
                         >
                             <div v-if="levelSelected.value === 3 || levelSelected.value === 4">
-                                <label for="desakel" class="block font-bold">Nama Desa/Kelurahan</label>
+                                <label for="desakel" class="block font-bold">Desa/Kelurahan</label>
                                 <Select id="desakel" v-model="desaSelected" :options="selectDesa" optionLabel="label" placeholder="Pilih Desa/Kelurahan" required="true" @change="checkDesa" @blur="isTPS" :invalid="errorDesa.length > 0" fluid :disabled="submitted"></Select>
                             </div>
                             <div class="-mt-4" v-if="errorDesa.length">
@@ -766,8 +782,9 @@ const alert_response = (rsp) => {
                     <div class="-mt-4" v-if="errorPwd.length">
                         <Message severity="error" class="">{{ errorPwd }}</Message>
                     </div>
+                    <Divider />
                     <div v-if="form.type === 'new'">
-                        <label for="generate_password" class="block font-bold">Generated Password</label>
+                        <label for="generate_password" class="block font-bold">Generated Password<br> <small>(Klik tombol <u>salin</u> apabila Anda ingin menggunakan password ini)</small></label>
                         <InputGroup class="mb-5">
                             <InputText id="generate_password" v-model="pwdGenerator" placeholder="Generated Password" required="false" fluid :disabled="submitted" />
                             <Button label="Salin" icon="pi pi-copy" v-tooltip.bottom="'Salin Password'" @click="copyPwd" :disabled="submitted" />
@@ -777,11 +794,11 @@ const alert_response = (rsp) => {
                     <div class="mb-2">&nbsp;</div>
                 </div>
 
-                <div class="w-full md:w-2/12" v-if="form.type === 'detail' && auth.level < 2">
+                <div class="w-full md:w-2/12" v-if="form.type === 'detail' && auth.level < 0">
                     <Divider layout="vertical" class="!hidden md:!flex"><b>DETAIL</b></Divider>
                 </div>
 
-                <div class="w-full md:w-5/12 flex items-center justify-center py-5" v-if="form.type === 'detail' && auth.level < 2">
+                <div class="w-full md:w-5/12 flex items-center justify-center py-5" v-if="form.type === 'detail' && auth.level < 0">
                     <Button label="Sign Up" icon="pi pi-user-plus" severity="success" class="w-full max-w-[17.35rem] mx-auto"></Button>
                 </div>
             </div>
@@ -794,16 +811,17 @@ const alert_response = (rsp) => {
         <Dialog v-model:visible="changePwdDialog" :style="{ width: '450px' }" :header="'Ubah Password ' + form.name" :modal="true">
             <div class="flex flex-col gap-6">
                 <div>
-                    <label for="password" class="block font-bold">Password Baru</label>
+                    <label for="password" class="block font-bold">Password Baru (Manual Password)</label>
                     <Password id="password" v-model="form.pass" placeholder="Password" required="true" fluid :toggleMask="true" :feedback="true" @change="checkPwd" :invalid="errorPwd.length > 0" :disabled="submitted" />
                 </div> 
                 <div class="-mt-4" v-if="errorPwd.length">
                     <Message severity="error" class="">{{ errorPwd }}</Message>
                 </div>
+                <Divider class="font-bold">ATAU</Divider>
                 <div>
                     <label for="generate_password" class="block font-bold">
                         Generated Password 
-                        <Button icon="pi pi-question" size="small" text v-tooltip.right="'Gunakan password generator ini apabila bingung membuat password'" />
+                        <Button icon="pi pi-question" size="small" text v-tooltip.right="'Gunakan password generator ini apabila Anda menginginkannya'" />
                     </label>
                     <InputGroup class="mb-5">
                         <InputText id="generate_password" v-model="pwdGenerator" placeholder="Generated Password" required="false" fluid :disabled="submitted" />

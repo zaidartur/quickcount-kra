@@ -63,8 +63,8 @@ class SettingController extends Controller
                 'app_tahun'     => $request->tahun,
                 'updated_at'    => date('Y-m-d H:i:s'),
             ];
-            if (isset($request->webiste)) {
-                $data += ['app_website'   => $request->tahun,];
+            if (isset($request->website)) {
+                $data += ['app_website'   => $request->website,];
             }
             if (isset($request->alamat)) {
                 $data += ['app_address'   => $request->alamat,];

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Models\Setting;
+
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
@@ -13,6 +15,11 @@ use Inertia\Response;
 
 class AuthenticatedSessionController extends Controller
 {
+    private $setting;
+    public function __construct() {
+        $this->setting = new Setting();
+    }
+
     /**
      * Display the login view.
      */
@@ -20,6 +27,7 @@ class AuthenticatedSessionController extends Controller
     {
         return Inertia::render('Auth/Login', [
             'canResetPassword' => Route::has('password.request'),
+            'apps'   => $this->setting->get_app(),
             'status' => session('status'),
         ]);
     }

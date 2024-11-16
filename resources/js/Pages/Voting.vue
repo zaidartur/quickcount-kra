@@ -25,7 +25,7 @@ const auth = page.props.auth.user
     <app-layout :apps="datas.apps">
         <ViewTPS :users="datas.users" :kec="datas.kec" :desa="datas.desa" :paslon="datas.paslon" :mydata="datas.mydata" :role="datas.profile" v-if="auth.level === 4" />
         <Vote :users="datas.users" :kec="datas.kec" :desa="datas.desa" :paslon="datas.paslon" :mydata="datas.mydata" :role="datas.profile" :sum-d-p-t="datas.dpt" v-if="auth.level === 3" />
-        <ViewKecamatan :users="datas.users" :kec="datas.kec" :desa="datas.desa" :paslon="datas.paslon" :mydata="datas.mydata" v-if="auth.level === 2" />
+        <ViewKecamatan :users="datas.users" :kec="datas.kec" :desa="datas.desa" :paslon="datas.paslon" :mydata="datas.mydata" :sum_dpt="datas.dpt" v-if="auth.level === 2" />
     </app-layout>
 </template>
 

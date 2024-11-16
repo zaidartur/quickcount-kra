@@ -43,6 +43,89 @@ class Vote extends Model
     public function data_voting_kecamatan()
     {
         $res   = [];
+        $desas = DB::table('data_voting')->select('desakel_id')->where('tahun_vote', date('Y'))->where('kec_id', Auth::user()->kode)->groupBy('desakel_id')->get();
+        $paslons = DB::table('data_paslon')->where('tahun', date('Y'))->orderBy('no_urut')->get();
+        if (count($desas) > 0) {
+            //data per desa
+            foreach ($desas as $d => $desa) {
+                $data_tps  = DB::table('data_voting')->where('desakel_id', $desa->desakel_id)->orderBy('no_tps')->get();
+                $data_desa = DB::table('data_desa as dd')->leftJoin('data_kecamatan as dk', 'dk.kec_id', '=', 'dd.kec_id')
+                            ->select('dk.kec_name', 'dd.desakel_name', 'dd.full_id', 'dd.kec_id', 'dd.desakel_id')
+                            ->where('dd.full_id', $desa->desakel_id)->first();
+                $total_dpt = DB::table('data_dpt')->where('full_id', $desa->desakel_id)->sum('total');
+                $total_tps = DB::table('data_dpt')->where('full_id', $desa->desakel_id)->count();
+                $tps = [];
+                $data_paslon = [];
+                $total = 0;
+                $invalid = 0;
+                foreach ($paslons as $paslon) {
+                    $data_paslon[] = [
+                        'uuid'  => $paslon->uuid_paslon,
+                        'name'  => $paslon->nama_paslon,
+                        'point' => 0,
+                    ];
+                }
+
+                //data per TPS
+                if (count($data_tps) > 0) {
+                    foreach ($data_tps as $t => $dt) {
+                        $fetch_tps = DB::table('data_voting as dv')
+                                    ->leftJoin('users as u', 'u.uuid', '=', 'dv.user')
+                                    ->leftJoin('data_dpt as dpt', 'dpt.id', '=', 'dv.dpt_id')
+                                    ->select('dv.*', 'u.name', 'u.level', 'u.kode', 'dpt.total')
+                                    ->where('dv.id', $dt->id)->first();
+                        $paslon_tps = json_decode($fetch_tps->vote_sah);
+                        $tps[$t] = [
+                            'id'        => $fetch_tps->id,
+                            'uuid_vote' => $fetch_tps->uuid_vote,
+                            'dpt_id'    => $fetch_tps->dpt_id,
+                            'kec_id'    => $fetch_tps->kec_id,
+                            'full_id'   => $fetch_tps->desakel_id,
+                            'no_tps'    => $fetch_tps->no_tps,
+                            'valid'     => $paslon_tps,
+                            'invalid'   => $fetch_tps->vote_tidaksah,
+                            'total'     => $fetch_tps->total_vote,
+                            'dpt'       => $fetch_tps->total,
+                            'user'      => $fetch_tps->name,
+                            'user_lvl'  => $fetch_tps->level,
+                            'user_kode' => $fetch_tps->kode,
+                        ];
+
+                        foreach ($data_paslon as $p => $dp) {
+                            foreach ($paslon_tps as $a => $pt) {
+                                if ($pt->uuid == $dp['uuid']) {
+                                    $add = intval($pt->point) + intval($dp['point']);
+                                    $data_paslon[$p]['point'] = $add;
+                                }
+                            }
+                        }
+                        $invalid = $invalid + intval($fetch_tps->vote_tidaksah);
+                        $total = $total + intval($fetch_tps->total_vote);
+                    }
+                }
+
+                $res[] = [
+                    'kec_id'        => $data_desa->kec_id,
+                    'kec_name'      => $data_desa->kec_name,
+                    'desakel_id'    => $data_desa->desakel_id,
+                    'desakel_name'  => $data_desa->desakel_name,
+                    'full_id'       => $data_desa->full_id,
+                    'valid'         => $data_paslon,
+                    'invalid'       => $invalid,
+                    'total'         => $total,
+                    'dpt'           => $total_dpt,
+                    'tps'           => $tps,
+                    'tps_total'     => $total_tps,
+                ];
+            }
+        }
+
+        return $res;
+    }
+
+    public function data_voting_kecamatan_old()
+    {
+        $res   = [];
         $datas = DB::table('data_voting as dv')->leftJoin('data_kecamatan as dk', 'dk.kec_id', '=', 'dv.kec_id')
                     ->leftJoin('data_desa as dd', 'dd.full_id', '=', 'dv.desakel_id')
                     ->leftJoin('users as u', 'u.uuid', '=', 'dv.user')

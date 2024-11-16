@@ -183,9 +183,9 @@ const detailData = async(prop) => {
                     </template>
                 </Column>
                 <template #expansion="slotProps">
-                    <div class="p-4">
+                    <div class="p-4 md:w-8/12">
                         <h6><u>Detail di Kecamatan {{ slotProps.data.kec_name }}</u></h6>
-                        <DataTable :value="slotProps.data.paslons">
+                        <DataTable :value="slotProps.data.paslons" class="">
                             <Column field="" header="Urut Paslon">
                                 <template #body="slotProps">
                                     {{ slotProps.data.urut }} &middot; {{ slotProps.data.nama }}

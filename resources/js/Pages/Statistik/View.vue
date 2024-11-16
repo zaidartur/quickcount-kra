@@ -372,7 +372,7 @@ console.log('sah', suaraSah.value)
                 <!-- <div class="card mb-0 col-span-12 md:col-span-6 lg:col-span-4 xl:col-span-4 cursor-pointer" v-for="camat in filtered_data"> -->
                     <div class="flex justify-between mb-4">
                         <div>
-                            <span class="block text-muted-color font-medium mb-4">Suara masuk {{ formatNumber(camat.total) ?? 0 }}</span>
+                            <span class="block text-muted-color font-medium mb-4">Suara masuk {{ formatNumber(camat.total) }}</span>
                             <div class="text-surface-900 dark:text-surface-0 font-semibold text-2xl">
                                 {{ camat.kec_name }}
                             </div>
@@ -448,7 +448,7 @@ console.log('sah', suaraSah.value)
                 <div class="col-span-12 md:col-span-6 lg:col-span-3 xl:col-span-3 rounded-xl" :id="'card_'+ds.full_id" @mouseover="mouseOnCard(ds.full_id)" @mouseout="mouseOutCard(ds.full_id)" v-for="ds in desas">
                     <Card class="h-full border border-primary-300">
                         <template #title>{{ ds.name }}</template>
-                        <template #subtitle>{{ ds.total }} Suara</template>
+                        <template #subtitle>{{ formatNumber(ds.total) }} Suara</template>
                         <template #content>
                             <!-- <span class="font-bold text-xl">{{ ds.name }}</span> ({{ ds.total }} Suara) -->
                             <Divider layout="horizontal" class="!hidden md:!flex"></Divider>

@@ -1,14 +1,18 @@
 <script setup>
 import { useLayout } from '@/Layouts/composables/layout';
 import AppConfigurator from './AppConfigurator.vue';
-import { useForm } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import Dialog from 'primevue/dialog';
-import { ref } from 'vue';
+import { ref, defineProps } from 'vue';
 import NavLink from '@/Components/NavLink.vue';
 
 const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
 const form = useForm({})
 const displayConfirmation = ref(false)
+
+const cfg = defineProps({
+    apps: Object
+})
 
 const openConfirmation = () => {
     displayConfirmation.value = true;
@@ -21,6 +25,9 @@ const closeConfirmation = () => {
 const signout = () => {
     form.post('/logout')
 }
+
+const page  = usePage()
+const env = page.props.env
 </script>
 
 <template>
@@ -30,7 +37,7 @@ const signout = () => {
                 <i class="pi pi-bars"></i>
             </button>
             <NavLink href="/" class="layout-topbar-logo">
-                <svg viewBox="0 0 54 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg viewBox="0 0 54 40" fill="none" xmlns="http://www.w3.org/2000/svg" v-if="cfg.apps.app_logo === null">
                     <path
                         fill-rule="evenodd"
                         clip-rule="evenodd"
@@ -47,8 +54,8 @@ const signout = () => {
                         />
                     </g>
                 </svg>
-                
-                <span>SAKAI</span>
+                <img :src="cfg.apps.app_logo" style="max-height: 30px;"/>
+                <span>{{ cfg.apps.app_name }}</span>
             </NavLink>
         </div>
 

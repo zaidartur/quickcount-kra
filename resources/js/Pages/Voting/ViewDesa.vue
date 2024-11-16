@@ -282,12 +282,13 @@ const desa_existing = () => {
 }
 
 const checkDesa = () => {
-    if (tpsSelected.value) {
+    if (tpsSelected.value && tpsSelected.value.value !== undefined) {
         errorDesa.value = ''
         jumlahDPT.value = tpsSelected.value.dpt
         return true
     } else {
         errorDesa.value = 'Mohon untuk memilih TPS dahulu'
+        console.log('error')
         return false
     }
 }
@@ -575,7 +576,7 @@ const formatNumber = (num) => {
                     <template #body="slotProps">
                         <b>
                             <Tag 
-                                :value="slotProps.data.total_vote + ' Suara (' + ((slotProps.data.total_vote / slotProps.data.total) * 100).toFixed(0) + '%)'" 
+                                :value="formatNumber(slotProps.data.total_vote) + ' Suara (' + ((slotProps.data.total_vote / slotProps.data.total) * 100).toFixed(0) + '%)'" 
                                 :severity="((slotProps.data.total_vote / slotProps.data.total) * 100) === 100 ? 'success' : 'warn'" 
                             />
                             <!-- {{ (slotProps.data.total_vote) }} suara ({{ ((slotProps.data.total_vote / slotProps.data.total) * 100).toFixed(0) }}%) -->

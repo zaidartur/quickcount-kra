@@ -32,6 +32,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'view'])->name('dashboard');
 
     Route::prefix('/statistik')->group(function() {
+        // Route::get('/grafik', [StatistikController::class, 'view'])->name('stat');
+        // Route::get('/tabel', [StatistikController::class, 'view_tabel'])->name('tabel');
         Route::get('/', [StatistikController::class, 'view'])->name('stat');
         Route::get('/detail/{uid}', [StatistikController::class, 'detail_statistik'])->name('stat.detail');
         Route::post('/kecamatan', [StatistikController::class, 'detail_kecamatan'])->name('stat.kec');
