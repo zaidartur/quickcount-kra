@@ -26,6 +26,7 @@ const datas = defineProps({
     paslon: Object,
     mydata: Object,
     role: Object,
+    dpt: Number,
 })
 onMounted(() => {
     isMobile()
@@ -37,12 +38,12 @@ const desas = ref(new Array())
 const paslons = ref(new Array())
 const votingPoint = ref(new Array())
 
-// const socket = io('http://localhost:3000', {
-//     withCredentials: true,
-// })
-const socket = io('https://qcws.caturnus.com', {
+const socket = io('http://localhost:3000', {
     withCredentials: true,
 })
+// const socket = io('https://qcws.caturnus.com', {
+//     withCredentials: true,
+// })
 
 const initData = () => {
     kecamatan.value = []
@@ -103,6 +104,7 @@ const confirmDialog = ref(false)
 const submitted = ref(false)
 const myPassword = ref(null)
 const detectMobile = ref(false)
+const rekapInputan = ref(0)
 const invalidVote = ref(
     datas.mydata.length > 0 ? datas.mydata[0].vote_tidaksah : 0
 )
@@ -308,6 +310,7 @@ const cancelUpdateDesa = () => {
     editLabel.value.icon = 'pi pi-pencil'
     votingPoint.value = JSON.parse(datas.mydata[0].vote_sah)
     invalidVote.value = datas.mydata[0].vote_tidaksah
+    sum_suara_masuk()
     form.type = 'edit'
 }
 
@@ -400,14 +403,39 @@ const alert_response = (rsp) => {
         toast.add({ severity: 'success', summary: 'Berhasil', detail: rsp.msg, life: 3000 });
     }
 }
+
+const formatNumber = (num) => {
+    const value = parseInt(num)
+    if (value) return value.toLocaleString({ style: 'number' })
+    return 0
+}
+
+const sum_suara_masuk = async() => {
+    rekapInputan.value = 0
+    const datas = await votingPoint.value
+    // console.log('vp', datas)
+    datas.map((dp) => {
+        if (dp.point >= 0) {
+            const res = rekapInputan.value + parseInt(dp.point)
+            rekapInputan.value = res
+        } else {
+            const res = rekapInputan.value
+            rekapInputan.value = res
+        }
+    })
+    const _total = rekapInputan.value + parseInt(invalidVote.value)
+    rekapInputan.value = _total
+}
 </script>
 
 <template>
     <Head title="Suara Masuk" />
 
     <div>
-        <h3 class="mb-5">Input Suara Masuk TPS <span v-if="!detectMobile">{{ datas.role.text }}</span></h3>
-        <h3 v-if="detectMobile" class="-mt-7">{{ datas.role.text }}</h3>
+        <h3 class="mb-5" v-if="!detectMobile">Input Suara Masuk TPS {{ datas.role.text }}</h3>
+        <h3 class="mb-5 text-center" v-if="detectMobile">Input Suara Masuk<br>TPS {{ datas.role.text }}</h3>
+        <h5 v-if="!detectMobile">Jumlah DPT : {{ formatNumber(datas.dpt) }} || Jumlah Suara Masuk : {{ formatNumber(rekapInputan) }} <i class="pi pi-verified" style="color: green" v-if="datas.dpt.toString() === rekapInputan.toString()"></i></h5>
+        <h5 v-if="detectMobile" class="text-center">Jumlah DPT : {{ formatNumber(datas.dpt) }} <br>Jumlah Suara Masuk : {{ formatNumber(rekapInputan) }} <i class="pi pi-verified" style="color: green" v-if="datas.dpt.toString() === rekapInputan.toString()"></i></h5>
 
         <!-- <div class="flex flex-col md:flex-row md:w-8/12 w-full mb-5" v-if="auth.level === 7">
             <label for="kecamatan" class="md:w-5/12">Kecamatan</label>
@@ -434,14 +462,14 @@ const alert_response = (rsp) => {
                     <h5 class="md:w-6/12 -mb-0">{{ psl.nama_paslon }}</h5>
                     <IconField class="md:w-10/12">
                         <InputIcon class="pi pi-envelope" />
-                        <InputNumber placeholder="Jumlah voting" v-model="votingPoint[idx].point" class="md:w-6/12" :autofocus="idx === 0 && !inputStatus" :disabled="inputStatus" />
+                        <InputNumber placeholder="Jumlah voting" v-model="votingPoint[idx].point" class="md:w-6/12" :autofocus="idx === 0 && !inputStatus" @blur="sum_suara_masuk" :disabled="inputStatus" />
                     </IconField>
                 </div>
                 <div class="mb-5">
                     <h5 class="md:w-6/12 -mb-0 text-red-500">Suara Tidak Sah</h5>
                     <IconField class="md:w-10/12">
                         <InputIcon class="pi pi-envelope" />
-                        <InputNumber placeholder="Jumlah voting" v-model="invalidVote" class="md:w-6/12" invalid :disabled="inputStatus" />
+                        <InputNumber placeholder="Jumlah voting" v-model="invalidVote" class="md:w-6/12" invalid @blur="sum_suara_masuk" :disabled="inputStatus" />
                     </IconField>
                 </div>
             </div>
@@ -459,14 +487,14 @@ const alert_response = (rsp) => {
                     <h5 class="md:w-6/12 -mb-0">{{ psl.nama_paslon }}</h5>
                     <IconField class="md:w-10/12">
                         <InputIcon class="pi pi-envelope" />
-                        <InputNumber placeholder="Jumlah voting" v-model="votingPoint[idx].point" fluid class="md:w-6/12" :autofocus="idx === 0 && !inputStatus" inputStyle="height:55px; font-size: 24px; font-weight: bold;" :disabled="inputStatus" />
+                        <InputNumber placeholder="Jumlah voting" v-model="votingPoint[idx].point" fluid class="md:w-6/12" :autofocus="idx === 0 && !inputStatus" @blur="sum_suara_masuk" inputStyle="height:55px; font-size: 24px; font-weight: bold;" :disabled="inputStatus" />
                     </IconField>
                 </div>
                 <div class="mb-5">
                     <h5 class="md:w-6/12 -mb-0 text-red-500">Suara Tidak Sah</h5>
                     <IconField class="md:w-10/12">
                         <InputIcon class="pi pi-envelope" />
-                        <InputNumber placeholder="Jumlah voting" v-model="invalidVote" fluid class="md:w-6/12" invalid inputStyle="height:55px; font-size: 24px; font-weight: bold;" :disabled="inputStatus" />
+                        <InputNumber placeholder="Jumlah voting" v-model="invalidVote" fluid class="md:w-6/12" invalid @blur="sum_suara_masuk" inputStyle="height:55px; font-size: 24px; font-weight: bold;" :disabled="inputStatus" />
                     </IconField>
                 </div>
             </div>

@@ -2,6 +2,7 @@
 import { defineProps } from 'vue';
 import AppLayout from "@/Layouts/AppLayout.vue";
 import Users from '@/Pages/Users/View.vue'
+import crypto from 'crypto'
 
 const datas = defineProps({
     apps: Object,
@@ -9,6 +10,11 @@ const datas = defineProps({
     kec: Object,
     desa: Object,
 })
+
+const decrypt = (data) => {
+    //
+}
+// console.log('aa',import.meta.env.VITE_APP_KEY)
 </script>
 
 <template>

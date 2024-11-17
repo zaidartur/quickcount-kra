@@ -8,6 +8,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Hash;
 use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Facades\Crypt;
 
 use App\Models\User;
 use App\Models\Data;

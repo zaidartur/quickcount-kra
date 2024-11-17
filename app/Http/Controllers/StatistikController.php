@@ -46,8 +46,13 @@ class StatistikController extends Controller
             'paslon'    => $this->setting->data_paslon(),
             'kec'       => $this->data->data_kecamatan(),
             'desa'      => $this->data->data_desa(),
-            'statkec'   => $this->statistik->statistik_kecamatan(),
+            'statkec'   => $this->statistik->tabel_kecdesatps(),
         ]);
+    }
+
+    public function detail_tabel_kecamatan(Request $request)
+    {
+        //
     }
 
     public function detail_statistik($uid)
@@ -87,12 +92,13 @@ class StatistikController extends Controller
 
     public function testing_tabel()
     {
-        $data = [
-            'data'      => $this->statistik->statistik_kecamatan(),
-            'paslon'    => $this->setting->data_paslon(),
-            'alldata'   => $this->vote->all_data_voting(),
-        ];
-        return view('template_hasil_suara', $data);
+        // $data = [
+        //     'data'      => $this->statistik->statistik_kecamatan(),
+        //     'paslon'    => $this->setting->data_paslon(),
+        //     'alldata'   => $this->vote->all_data_voting(),
+        // ];
+        // return view('template_hasil_suara', $data);
+        return $this->statistik->tabel_kecdesatps();
     }
 
     public function testing_desa_tabel($kec)

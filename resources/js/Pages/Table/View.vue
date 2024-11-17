@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, ref, onMounted  } from 'vue';
+import { defineProps, ref, nextTick   } from 'vue';
 import { router, useForm, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import { useToast } from 'primevue/usetoast';
@@ -22,6 +22,7 @@ const datas = defineProps({
 })
 
 const dt = ref()
+const op = ref()
 const chartOptions = ref()
 const kecamatan = ref(new Array())
 const desas = ref(new Array())
@@ -35,6 +36,13 @@ const detailDialog = ref(false)
 const headerDetail = ref(null)
 const dataProgress = ref(new Array())
 const expandedRows = ref([])
+const detailTerpilih = ref([])
+const detailDesa = ref([])
+const rawDesa = ref([])
+const desaSelected = ref()
+const headerTitle = ref('')
+const expandedTPS = ref([])
+const desaSelectedRaw = ref()
 
 const initData = () => {
     kecamatan.value = []
@@ -86,9 +94,35 @@ function collapseAll() {
     expandedRows.value = null;
 }
 
+function expandDialog() {
+    detailTerpilih.value = detailDesa.value.reduce((acc, p) => (acc[p.id] = true) && acc, {});
+}
+
+function collapseDialog() {
+    detailTerpilih.value = null;
+}
+
+function expandPop() {
+    expandedTPS.value = desaSelected.value.reduce((acc, p) => (acc[p.id] = true) && acc, {});
+}
+
+function collapsePop() {
+    expandedTPS.value = null;
+}
+
 function formatNumber(value) {
     if (value) return value.toLocaleString({ style: 'number' })
     return 0
+}
+
+const notps = (data) => {
+    if (data < 10) {
+        return `00${data}`
+    } else if (data > 9 && data < 100) {
+        return `0${data}`
+    } else {
+        return data
+    }
 }
 
 const _detail = (val) => {
@@ -128,6 +162,27 @@ const export_data = async() => {
 
 const detailData = async(prop) => {
     console.log('detail', prop)
+    headerTitle.value = 'Detail Kecamatan ' + prop.kec_name
+    rawDesa.value = prop
+    detailDesa.value = prop.desas
+    detailDialog.value = true
+}
+
+const detail_tps = (event, datas) => {
+    op.value.hide();
+    if (desaSelectedRaw.value?.id === datas.id) {
+        desaSelectedRaw.value = null;
+    } else {
+        desaSelected.value = datas.tps
+        desaSelectedRaw.value = datas
+        nextTick(() => {
+            op.value.show(event);
+        });
+    }
+    // desaSelectedRaw.value = datas
+    // desaSelected.value = datas.tps
+    // op.value.show(event)
+    console.log(datas.id, desaSelectedRaw.value)
 }
 
 </script>
@@ -140,7 +195,7 @@ const detailData = async(prop) => {
             <Toolbar class="mb-6" v-if="auth.level < 2">
                 <template #end>
                     <!-- <Button label="Import" icon="pi pi-download" severity="success" class="mr-2" @click="openNew" outlined /> -->
-                    <Button label="Export" icon="pi pi-upload" severity="primary" @click="export_data()" :disabled="desa.length > 0 ? false : true" outlined />
+                    <Button label="Export ke Excel" icon="pi pi-upload" severity="primary" @click="export_data()" :disabled="desa.length > 0 ? false : true" outlined />
                 </template>
             </Toolbar>
 
@@ -163,13 +218,18 @@ const detailData = async(prop) => {
                     </div>
                 </template>
 
-                <Column expander style="width: 5rem" />
+                <Column expander style="width: 5rem" header="Paslon" />
                 <Column field="" header="Kecamatan" sortable style="min-width: 16rem">
                     <template #body="slotProps">
                         <b>{{ slotProps.data.kec_name }}</b>
                     </template>
                 </Column>
-                <Column field="" header="Jumlah Suara Masuk" sortable style="min-width: 16rem">
+                <Column field="" header="Jumlah DPT" sortable style="min-width: 16rem">
+                    <template #body="slotProps">
+                        <Tag :value="formatNumber(slotProps.data.dpt)" :severity="'primary'" />
+                    </template>
+                </Column>
+                <Column field="" header="Suara Masuk" sortable style="min-width: 16rem">
                     <template #body="slotProps">
                         <Tag :value="formatNumber(slotProps.data.total)" :severity="'info'" />
                     </template>
@@ -184,7 +244,7 @@ const detailData = async(prop) => {
                         <Tag :value="formatNumber(slotProps.data.invalid)" :severity="'danger'" />
                     </template>
                 </Column>
-                <Column :exportable="false" style="min-width: 12rem">
+                <Column :exportable="false" style="min-width: 12rem" header="Info">
                     <template #body="slotProps">
                         <Button icon="pi pi-info-circle" outlined rounded class="mr-2" v-tooltip.bottom="`Lihat Detail ${slotProps.data.kec_name}`" @click="detailData(slotProps.data)" />
                     </template>
@@ -205,6 +265,137 @@ const detailData = async(prop) => {
             </DataTable>
         </div>
        
+        <Dialog v-model:visible="detailDialog" :style="{ width: '850px' }" :header="headerTitle" :modal="true" :closable="true" >
+            <div>
+                <h6 class="text-center">Jumlah DPT : {{ formatNumber(rawDesa.dpt) }} || Jumlah TPS : {{ formatNumber(rawDesa.tps_total) }}</h6>
+                <DataTable v-model:expandedRows="detailTerpilih" :value="detailDesa" ref="dt" dataKey="id" scrollable scrollHeight="flex" tableStyle="max-width: 850px">
+                    <template #header>
+                        <div class="flex flex-wrap justify-start gap-2">
+                            <Button text icon="pi pi-plus" label="Buka Semua" @click="expandDialog" />
+                            <Button text icon="pi pi-minus" label="Tutup Semua" @click="collapseDialog" />
+                        </div>
+                    </template>
+                    <Column expander style="width: 5rem" header="Paslon" />
+                    <Column field="desakel_name" header="Nama Desa/Kel.">
+                        <template #body="slotProps">
+                            <Button text :label="slotProps.data.desakel_name" @click="detail_tps($event, slotProps.data)" v-tooltip.right="'Klik untuk melihat data TPS di ' + slotProps.data.desakel_name" />
+                        </template>
+                    </Column>
+                    <Column field="" header="Suara Sah">
+                        <template #body="slotProps">
+                            {{ formatNumber(slotProps.data.valid) }}
+                        </template>
+                    </Column>
+                    <Column field="" header="Suara Tidak Sah">
+                        <template #body="slotProps">
+                            {{ formatNumber(parseInt(slotProps.data.invalid)) }}
+                        </template>
+                    </Column>
+                    <Column field="" header="Jumlah Suara">
+                        <template #body="slotProps">
+                            <Tag 
+                                :value="formatNumber(slotProps.data.total) + ' Suara (' + ((slotProps.data.total / slotProps.data.dpt) * 100).toFixed(0) + '%)'" 
+                                :severity="((slotProps.data.total / slotProps.data.dpt) * 100) === 100 ? 'success' : 'warn'" 
+                            />
+                            <!-- {{ formatNumber(slotProps.data.total) }} -->
+                        </template>
+                    </Column>
+                    <Column field="" header="Jumlah DPT">
+                        <template #body="slotProps">
+                            {{ formatNumber(slotProps.data.dpt) }}
+                        </template>
+                    </Column>
+                    <Column field="" header="Jumlah TPS">
+                        <template #body="slotProps">
+                            {{ formatNumber(slotProps.data.tps_total) }}
+                        </template>
+                    </Column>
+                    <template #expansion="slotProps">
+                        <div class="p-4 md:w-8/12">
+                            <h6><u>Detail Desa/Kel.  {{ notps(slotProps.data.desakel_name) }}</u></h6>
+                            <DataTable :value="slotProps.data.paslons">
+                                <Column field="nama" header="Urut Paslon"></Column>
+                                <Column field="voting" header="Jumlah Suara">
+                                    <template #body="slotProps">
+                                        {{ formatNumber(slotProps.data.voting) }}
+                                    </template>
+                                </Column>
+                            </DataTable>
+                        </div>
+                    </template>
+                </DataTable>
+            </div>
+            <template #footer>
+                <Button label="Tutup" icon="pi pi-times" text @click="detailDialog = false" :disabled="submitted" />
+            </template>
+        </Dialog>
+
+        <Popover ref="op">
+            <div v-if="desaSelected" class="rounded flex flex-col">
+                <div>
+                    <h6 class="text-center">Data TPS di Desa/Kel. {{ desaSelectedRaw.desakel_name }}</h6>
+                    <h6 class="text-center">Jumlah DPT : {{ formatNumber(desaSelectedRaw.dpt) }}</h6>
+                    <DataTable 
+                        v-model:expandedRows="expandedTPS" 
+                        :value="desaSelected" 
+                        ref="dt" 
+                        dataKey="id" 
+                        :rows="5" 
+                        :paginator="true"
+                    >
+                        <!-- <template #header>
+                            <div class="flex flex-wrap justify-start gap-2">
+                                <Button text icon="pi pi-plus" label="Buka Semua" @click="expandPop" />
+                                <Button text icon="pi pi-minus" label="Tutup Semua" @click="collapsePop" />
+                            </div>
+                        </template>
+                        <Column expander style="width: 5rem" header="Paslon" /> -->
+                        <Column field="desakel_name" header="Nomor TPS">
+                            <template #body="slotProps">
+                                {{ notps(slotProps.data.no_tps) }}
+                            </template>
+                        </Column>
+                        <Column field="" header="Suara Sah">
+                            <template #body="slotProps">
+                                {{ formatNumber(slotProps.data.valid) }}
+                            </template>
+                        </Column>
+                        <Column field="" header="Suara Tidak Sah">
+                            <template #body="slotProps">
+                                {{ formatNumber(parseInt(slotProps.data.invalid)) }}
+                            </template>
+                        </Column>
+                        <Column field="" header="Jumlah Suara">
+                            <template #body="slotProps">
+                                <Tag 
+                                    :value="formatNumber(slotProps.data.total) + ' Suara (' + ((slotProps.data.total / slotProps.data.dpt) * 100).toFixed(0) + '%)'" 
+                                    :severity="((slotProps.data.total / slotProps.data.dpt) * 100) === 100 ? 'success' : 'warn'" 
+                                />
+                                <!-- {{ formatNumber(slotProps.data.total) }} -->
+                            </template>
+                        </Column>
+                        <Column field="" header="Jumlah DPT">
+                            <template #body="slotProps">
+                                {{ formatNumber(slotProps.data.dpt) }}
+                            </template>
+                        </Column>
+                        <!-- <template #expansion="slotProps">
+                            <div class="p-4 md:w-8/12">
+                                <h6><u>Detail TPS  {{ notps(slotProps.data.no_tps) }}</u></h6>
+                                <DataTable :value="slotProps.data.paslons">
+                                    <Column field="nama" header="Urut Paslon"></Column>
+                                    <Column field="voting" header="Jumlah Suara">
+                                        <template #body="slotProps">
+                                            {{ formatNumber(slotProps.data.voting) }}
+                                        </template>
+                                    </Column>
+                                </DataTable>
+                            </div>
+                        </template> -->
+                    </DataTable>
+                </div>
+            </div>
+        </Popover>
     </div>
 </template>
 

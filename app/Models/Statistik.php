@@ -190,4 +190,143 @@ class Statistik extends Model
 
         return $res;
     }
+
+    public function tabel_kecdesatps()
+    {
+        $data_kec = DB::table('data_kecamatan')->orderBy('id')->get();
+        $data_paslon = DB::table('data_paslon')->where('tahun', date('Y'))->orderBy('no_urut')->get();
+        $res = [];
+
+        foreach ($data_kec as $k => $isKec) {
+            $data_desa = DB::table('data_desa')->where('kec_id', $isKec->kec_id)->orderBy('full_id')->get();
+            $tps_total = 0;
+            $res_desa = [];
+            $invalid = 0;
+            $valid = 0;
+            $total = 0;
+            $dpt = 0;
+
+            $paslon_kec = [];
+            foreach ($data_paslon as $ps) {
+                $paslon_kec[] = [
+                    'uuid'  => $ps->uuid_paslon,
+                    'nama'  => $ps->nama_paslon,
+                    'urut'  => $ps->no_urut,
+                    'foto'  => $ps->foto_paslon,
+                    'voting'=> 0,
+                ];
+            }
+
+            //data desa
+            foreach ($data_desa as $d => $isDesa) {
+                $data_tps = DB::table('data_dpt')->where('full_id', $isDesa->full_id)->get();
+                $tps_total = $tps_total + count($data_tps);
+                $res_tps = [];
+                $_invalid = 0;
+                $_valid = 0;
+                $_total = 0;
+                $_dpt = 0;
+
+                $paslon_desa = [];
+                foreach ($data_paslon as $ps) {
+                    $paslon_desa[] = [
+                        'uuid'  => $ps->uuid_paslon,
+                        'nama'  => $ps->nama_paslon,
+                        'urut'  => $ps->no_urut,
+                        'foto'  => $ps->foto_paslon,
+                        'voting'=> 0,
+                    ];
+                }
+
+                //data TPS
+                foreach ($data_tps as $t => $is_tps) {
+                    $data_voting = DB::table('data_voting')->where('dpt_id', $is_tps->id)->where('tahun_vote', $is_tps->tahun_dpt)->first();
+                    $__invalid = 0;
+                    $__valid = 0;
+                    $__total = 0;
+                    $__dpt = intval($is_tps->total);
+
+                    $paslon_tps = [];
+                    foreach ($data_paslon as $ps) {
+                        $paslon_tps[] = [
+                            'uuid'  => $ps->uuid_paslon,
+                            'nama'  => $ps->nama_paslon,
+                            'urut'  => $ps->no_urut,
+                            'foto'  => $ps->foto_paslon,
+                            'voting'=> 0,
+                        ];
+                    }
+
+                    if ($data_voting) {
+                        $paslon_tps = json_decode($data_voting->vote_sah);
+                        $__invalid = intval($data_voting->vote_tidaksah);
+                        $__total = intval($data_voting->total_vote);
+
+                        foreach ($paslon_tps as $a => $arrp) {
+                            foreach ($paslon_desa as $d => $dp) {
+                                if ($arrp->uuid == $dp['uuid']) {
+                                    $paslon_desa[$d]['voting'] = intval($dp['voting']) + intval($arrp->point);
+                                }
+                            }
+                            foreach ($paslon_kec as $c => $pk) {
+                                if ($arrp->uuid == $pk['uuid']) {
+                                    $paslon_kec[$c]['voting'] = intval($pk['voting']) + intval($arrp->point);
+                                }
+                            }
+                            $__valid = $__valid + intval($arrp->point);
+                        }
+
+                        $_invalid = $_invalid + $__invalid;
+                        $_valid = $_valid + $__valid;
+                        $_total = $_total + $__total;
+                    }
+                    $_dpt = $_dpt + $__dpt;
+
+                    $res_tps[] = [
+                        'id'            => $is_tps->id,
+                        'no_tps'        => $is_tps->no_tps,
+                        'full_id'       => $is_tps->full_id,
+                        'total'         => $__total,
+                        'valid'         => $__valid,
+                        'invalid'       => $__invalid,
+                        'paslons'       => $paslon_tps,
+                        'dpt'           => $__dpt,
+                    ];
+                }
+
+                $invalid = $invalid + $_invalid;
+                $valid = $valid + $_valid;
+                $total = $total + $_total;
+                $dpt = $dpt + $_dpt;
+
+                $res_desa[] = [
+                    'id'            => $isDesa->id,
+                    'desakel_name'  => $isDesa->desakel_name,
+                    'full_id'       => $isDesa->full_id,
+                    'total'         => $_total,
+                    'valid'         => $_valid,
+                    'invalid'       => $_invalid,
+                    'paslons'       => $paslon_desa,
+                    'tps'           => $res_tps,
+                    'tps_total'     => count($data_tps),
+                    'dpt'           => $_dpt,
+                ];
+            }
+
+            $res[] = [
+                'id'            => $isKec->id,
+                'kec_name'      => $isKec->kec_name,
+                'kec_id'        => $isKec->kec_id,
+                'total'         => $total,
+                'valid'         => $valid,
+                'invalid'       => $invalid,
+                'paslons'       => $paslon_kec,
+                'desas'         => $res_desa,
+                'tps_total'     => $tps_total,
+                'dpt'           => $dpt,
+            ];
+        }
+
+        return $res;
+    }
 }
