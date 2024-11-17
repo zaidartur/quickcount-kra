@@ -37,12 +37,12 @@ const desas = ref(new Array())
 const paslons = ref(new Array())
 const votingPoint = ref(new Array())
 
-const socket = io('http://localhost:3000', {
-    withCredentials: true,
-})
-// const socket = io('https://qcws.caturnus.com', {
+// const socket = io('http://localhost:3000', {
 //     withCredentials: true,
 // })
+const socket = io('https://qcws.caturnus.com', {
+    withCredentials: true,
+})
 
 const initData = () => {
     kecamatan.value = []
@@ -131,17 +131,12 @@ const form = useForm({
 })
 
 const sendingSocket = (datas) => {
-    // console.log('socket', datas)
-    // uuid, kec, desa, vote(+-)
-    // socket.on('connection', (sc) => {
-    //     //
-    // })
-    console.log('sending-socket', datas)
+    // console.log('sending-socket', datas)
     socket.emit('sending-paslon', datas)
 }
 
 const updateSocket = (datas) => {
-    console.log('update-socket', datas)
+    // console.log('update-socket', datas)
     socket.emit('updating-paslon', datas)
 }
 
@@ -171,7 +166,7 @@ const findDesa = (val) => {
 const myKecamatan = () => {
     let isKec = null
     if (auth.level === 2) {
-        isKec = (auth.kode < 10 ? ('0'+auth.kode.toString()) : auth.kode.toString())
+        isKec = (auth.kode.length < 2 ? ('0'+auth.kode.toString()) : auth.kode.toString())
     } else if (auth.level === 3) {
         const textKec = auth.kode.toString()
         isKec = textKec.substr(2,2)
@@ -237,7 +232,6 @@ const submitVoteDesa = () => {
     form.post('/suara-masuk/tambah-data', {
         resetOnSuccess: true,
         onSuccess: (res) => {
-            console.log('res', res)
             const messages = res.props.flash.message
             initData()
             alert_response(messages)

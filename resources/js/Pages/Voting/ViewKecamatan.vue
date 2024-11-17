@@ -47,12 +47,12 @@ const voteTotal = ref(0)
 const expandedRows = ref([])
 const dataPaslon = ref(new Array())
 
-const socket = io('http://localhost:3000', {
-    withCredentials: true,
-})
-// const socket = io('https://qcws.caturnus.com/', {
+// const socket = io('http://localhost:3000', {
 //     withCredentials: true,
 // })
+const socket = io('https://qcws.caturnus.com/', {
+    withCredentials: true,
+})
 
 const initData = () => {
     defaultData.value = []
@@ -346,7 +346,7 @@ const submit = () => {
                 initVote.map((iv) => {
                     const data = {
                         uuid: iv.uuid,
-                        kec: (auth.kode < 10 ? ('0'+auth.kode.toString()) : auth.kode.toString()),
+                        kec: (auth.kode.length < 2 ? ('0'+auth.kode.toString()) : auth.kode.toString()),
                         desa: desaSelected.value.value,
                         tps: tpsSelected.value.value,
                         vote: iv.point,
@@ -356,7 +356,7 @@ const submit = () => {
                 if (isInvalid > 0) {
                     const data = {
                         uuid: 'invalid',
-                        kec: (auth.kode < 10 ? ('0'+auth.kode.toString()) : auth.kode.toString()),
+                        kec: (auth.kode.length < 2 ? ('0'+auth.kode.toString()) : auth.kode.toString()),
                         desa: desaSelected.value.value,
                         tps: tpsSelected.value.value,
                         vote: isInvalid,
@@ -459,7 +459,7 @@ const checkDiffVote = () => {
             const diff = parseInt(newest[i].point) - parseInt(d.point)
             const data = {
                 uuid: d.uuid,
-                kec: (auth.kode < 10 ? ('0'+auth.kode.toString()) : auth.kode.toString()),
+                kec: (auth.kode.length < 2 ? ('0'+auth.kode.toString()) : auth.kode.toString()),
                 desa: desaSelected.value.value,
                 vote: diff,
             }
@@ -475,7 +475,7 @@ const checkInvalidDiff = () => {
     if (diff !== 0) {
         const data = {
             uuid: 'invalid',
-            kec: (auth.kode < 10 ? ('0'+auth.kode.toString()) : auth.kode.toString()),
+            kec: (auth.kode.length < 2 ? ('0'+auth.kode.toString()) : auth.kode.toString()),
             desa: desaSelected.value.value,
             vote: diff,
         }
@@ -488,7 +488,7 @@ const updateVote = () => {
     checkInvalidDiff()
 
     submitted.value = true
-    console.log(form)
+    // console.log(form)
     form.post('/suara-masuk/tambah-data', {
         resetOnSuccess: true,
         onSuccess: (res) => {
@@ -602,8 +602,8 @@ const isMobile = () => {
     <Head title="Suara Masuk" />
 
     <div>
-        <h3 class="mb-5" v-if="!detectMobile">Input suara masuk {{ auth.level === 2 ? 'Kecamatan' : 'Desa/Kel.' }} {{ auth.level === 2 ? findKecamatan((auth.kode < 10 ? ('0'+auth.kode.toString()) : auth.kode.toString())) : (auth.level === 3 ? (findDesa(auth.kode.toString())+', '+findKecamatan(auth.kode.toString().substr(2,2))) : '') }}</h3>
-        <h3 class="mb-5 text-center" v-if="detectMobile">Input suara masuk <br> {{ auth.level === 2 ? 'Kecamatan' : 'Desa/Kel.' }} {{ auth.level === 2 ? findKecamatan((auth.kode < 10 ? ('0'+auth.kode.toString()) : auth.kode.toString())) : (auth.level === 3 ? (findDesa(auth.kode.toString())+', '+findKecamatan(auth.kode.toString().substr(2,2))) : '') }}</h3>
+        <h3 class="mb-5" v-if="!detectMobile">Input suara masuk {{ auth.level === 2 ? 'Kecamatan' : 'Desa/Kel.' }} {{ auth.level === 2 ? findKecamatan((auth.kode.length < 2 ? ('0'+auth.kode.toString()) : auth.kode.toString())) : (auth.level === 3 ? (findDesa(auth.kode.toString())+', '+findKecamatan(auth.kode.toString().substr(2,2))) : '') }}</h3>
+        <h3 class="mb-5 text-center" v-if="detectMobile">Input suara masuk <br> {{ auth.level === 2 ? 'Kecamatan' : 'Desa/Kel.' }} {{ auth.level === 2 ? findKecamatan((auth.kode.length < 2 ? ('0'+auth.kode.toString()) : auth.kode.toString())) : (auth.level === 3 ? (findDesa(auth.kode.toString())+', '+findKecamatan(auth.kode.toString().substr(2,2))) : '') }}</h3>
 
         <!-- <div class="mb-5">
             <Button label="Tambah Data" icon="pi pi-plus-circle" @click="submitVoteDialog" />

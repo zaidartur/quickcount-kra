@@ -41,12 +41,12 @@ const voteTotal = ref(0)
 const expandedRows = ref([])
 const dataPaslon = ref(new Array())
 
-const socket = io('http://localhost:3000', {
-    withCredentials: true,
-})
-// const socket = io('https://qcws.caturnus.com/', {
+// const socket = io('http://localhost:3000', {
 //     withCredentials: true,
 // })
+const socket = io('https://qcws.caturnus.com/', {
+    withCredentials: true,
+})
 
 const initData = () => {
     defaultData.value = []
@@ -143,7 +143,6 @@ const sendingSocket = (datas) => {
     // console.log('socket', datas)
     const add = voteTotal.value + datas.vote
     voteTotal.value = add
-    console.log('sendig', datas)
     socket.emit('sending-paslon', datas)
 }
 
@@ -151,7 +150,6 @@ const updateSocket = (datas) => {
     // console.log('update-socket', datas)
     const add = voteTotal.value + datas.vote
     voteTotal.value = add
-    console.log('updating', datas)
     socket.emit('updating-paslon', datas)
 }
 
@@ -288,7 +286,7 @@ const checkDesa = () => {
         return true
     } else {
         errorDesa.value = 'Mohon untuk memilih TPS dahulu'
-        console.log('error')
+        // console.log('error')
         return false
     }
 }
@@ -399,7 +397,6 @@ const editVoteDialog = (data,type) => {
     myPassword.value = null
     dataPaslon.value = JSON.parse(data.vote_sah)
     confirmDialog.value = true
-    console.log('edit', dataEdit.value)
 }
 
 const editData = async() => {
@@ -441,9 +438,7 @@ const editData = async() => {
 
 const checkDiffVote = () => {
     const old = JSON.parse(votingPoint.value)
-    console.log('old', votingPoint.value)
     const newest = dataPaslon.value
-    console.log('new', dataPaslon.value)
     const kode = auth.kode.toString()
     old.map((d, i) => {
         if (d.point === newest[i].point) {
@@ -489,7 +484,7 @@ const updateVoteDesa = () => {
     submitted.value = true
     form.voteValid  = JSON.stringify(dataPaslon.value)
     form.totalVote  = totalVote()
-    console.log(form)
+    // console.log(form)
     form.post('/suara-masuk/tambah-data', {
         resetOnSuccess: true,
         onSuccess: (res) => {

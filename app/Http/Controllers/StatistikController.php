@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\DataSuara;
 use App\Models\Data;
 use App\Models\Setting;
 use App\Models\Statistik;
@@ -10,6 +11,7 @@ use App\Models\Vote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StatistikController extends Controller
 {
@@ -67,6 +69,11 @@ class StatistikController extends Controller
         }
     }
 
+    public function export_statistik()
+    {
+        return Excel::download(new DataSuara(), 'data_suara_' . date('YmdHis') . '.xlsx');
+    }
+
     public function testing()
     {
         // return $this->statistik->statistik_kecamatan();
@@ -95,6 +102,7 @@ class StatistikController extends Controller
             'paslon'    => $this->setting->data_paslon(),
             'alldata'   => $this->vote->data_voting_paslon_kecamatan($kec),
             'kecamatan' => $this->data->detail_kecamatan($kec),
+            'tps'       => $this->statistik->statistik_tps($kec),
         ];
         return view('template_suara_kecamatan', $data);
     }

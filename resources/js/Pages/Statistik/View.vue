@@ -43,12 +43,12 @@ const detailDialog = ref(false)
 const headerDetail = ref(null)
 const dataProgress = ref(new Array())
 
-const socket = io('http://localhost:3000', {
-    withCredentials: true,
-})
-// const socket = io('https://qcws.caturnus.com', {
+// const socket = io('http://localhost:3000', {
 //     withCredentials: true,
 // })
+const socket = io('https://qcws.caturnus.com', {
+    withCredentials: true,
+})
 
 const initData = () => {
     kecamatan.value = []
@@ -83,7 +83,7 @@ const initData = () => {
 }
  
 initData() 
-console.log('progress', dataProgress.value)
+// console.log('progress', dataProgress.value)
 const paginator = ref(0)
 const index = ref(0)
 const sideBar = 280
@@ -99,7 +99,6 @@ const clrLabel = ['yellow', 'violet', 'blue', 'orange', 'amber', 'emerald', 'tea
 // }
 
 socket.on('get-paslon', (ps) => {
-    console.log('get', ps)
     dataProgress.value.some((fd, f) => {
         if (fd.kec_id === ps.kec) {
             if (ps.uuid === 'invalid') {
@@ -142,10 +141,8 @@ socket.on('get-paslon', (ps) => {
 })
 
 socket.on('update-paslon', (gp) => {
-    console.log('update', gp)
     dataProgress.value.some((fd, f) => {
         if (fd.kec_id === gp.kec) {
-            console.log('found it in progress')
             if (gp.uuid === 'invalid') {
                 fd.invalid = fd.invalid + gp.vote
                 suaraTidakSah.value = suaraTidakSah.value + gp.vote
@@ -164,7 +161,6 @@ socket.on('update-paslon', (gp) => {
             dataProgress.value[f].total = total
             const totalSeluruh = totalSeluruhSuara.value + gp.vote
             totalSeluruhSuara.value = totalSeluruh
-            console.log('updated', fd)
             return true
         }
     })
@@ -172,7 +168,6 @@ socket.on('update-paslon', (gp) => {
     // update on graph
     if (dataDetail.value.kec_id === gp.kec) {
         let number = null
-        console.log('found it in graph modal')
         chartData.value.uuid.some((id, i) => {
             if (id === gp.uuid) {
                 number = i
@@ -243,7 +238,6 @@ const mouseOutCard = (e) => {
 const _detail = (val) => {
     headerDetail.value = 'Detail Kecamatan ' + val.kec_name
     dataDetail.value = val
-    console.log('detail', dataDetail.value)
     // chartData.value = setChartData(dataDetail.value)
     setChartData()
     chartOptions.value = setChartOptions()
@@ -345,7 +339,6 @@ const setChartOptions = () => {
         }
     }
 }
-console.log('sah', suaraSah.value)
 </script>
 
 <template>

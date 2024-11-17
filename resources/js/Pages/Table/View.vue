@@ -8,6 +8,7 @@ import Column from 'primevue/column';
 import Button from 'primevue/button';
 import Toolbar from 'primevue/toolbar';
 import Tag from 'primevue/tag';
+import Popover from 'primevue/popover';
 
 const page  = usePage()
 const message = page.props.flash.message
@@ -68,7 +69,7 @@ const initData = () => {
 }
  
 initData() 
-console.log(dataProgress.value, 'OK')
+
 const paginator = ref(0)
 const index = ref(0)
 const sideBar = 280
@@ -119,6 +120,12 @@ const _detailKecamatan = async(_kec) => {
     })
 }
 
+const export_data = async() => {
+    // const form = useForm({})
+    // form.post('/tabel-statistik/export/data')
+    window.open('/tabel-statistik/export/data', '_blank')
+}
+
 const detailData = async(prop) => {
     console.log('detail', prop)
 }
@@ -133,7 +140,7 @@ const detailData = async(prop) => {
             <Toolbar class="mb-6" v-if="auth.level < 2">
                 <template #end>
                     <!-- <Button label="Import" icon="pi pi-download" severity="success" class="mr-2" @click="openNew" outlined /> -->
-                    <Button label="Export" icon="pi pi-upload" severity="primary" @click="exportCSV($event)" :disabled="desa.length > 0 ? false : true" outlined />
+                    <Button label="Export" icon="pi pi-upload" severity="primary" @click="export_data()" :disabled="desa.length > 0 ? false : true" outlined />
                 </template>
             </Toolbar>
 

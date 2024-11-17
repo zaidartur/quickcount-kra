@@ -46,7 +46,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [StatistikController::class, 'view_tabel'])->name('tabel');
         Route::get('/detail/{uid}', [StatistikController::class, 'detail_tabel_statistik'])->name('tabel.detail');
         Route::post('/kecamatan', [StatistikController::class, 'detail_tabel_kecamatan'])->name('tabel.kec');
+        // Route::post('/export/data', [StatistikController::class, 'export_statistik'])->name('tabel.export');
 
+        Route::get('/export/data', [StatistikController::class, 'export_statistik'])->name('tabel.export');
         Route::get('/testing/kecamatan', [StatistikController::class, 'testing_tabel'])->name('tabel.test');
         Route::get('/testing/desa/{kec}', [StatistikController::class, 'testing_desa_tabel']);
     });

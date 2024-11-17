@@ -56,7 +56,7 @@ const initWilayah = () => {
     } else {
         let kode = null
         if (auth.level === 2) {
-            kode = (auth.kode < 10 ? ('0'+auth.kode.toString()) : auth.kode.toString())
+            kode = (auth.kode.length < 2 ? ('0'+auth.kode.toString()) : auth.kode.toString())
         } else if (auth.level === 3) {
             kode = (auth.kode.toString().substr(2,2))
         }
@@ -342,30 +342,36 @@ const selectKec = () => {
     desaSelected.value = {}
     selectDesa.value = []
     
-    desa.value.map((tmp) => {
-        if (auth.level < 3) {
+    if (auth.level < 3) {
+        desa.value.map((tmp) => {
             if (tmp.kec_id === kecamatanSelected.value.value) {            
                 selectDesa.value.push({
                     label: tmp.desakel_name,
                     value: tmp.full_id
                 })
             }
-        } else if (auth.level === 3) {
-            if (tmp.full_id === auth.kode) {            
+        })
+    } else if (auth.level === 3) {
+        desa.value.some((tmp) => {
+            if (tmp.full_id === auth.kode) {
                 selectDesa.value.push({
                     label: tmp.desakel_name,
                     value: tmp.full_id
                 })
+                return true
             }
-        } else {
+        })
+    } else {
+        desa.value.some((tmp) => {
             if (tmp.full_id === auth.kode.split('-')[0]) {            
                 selectDesa.value.push({
                     label: tmp.desakel_name,
                     value: tmp.full_id
                 })
+                return true
             }
-        }
-    })
+        })
+    }
 }
 
 const openNew = () => {
@@ -447,7 +453,7 @@ const saveUser = async() => {
     if (checkName() && validateEmail() && checkLevel() && checkKecamatan() && checkDesa() && checkTPS() && checkPwd()) {
         // init
         const cek  = form.type === 'new' ? await axios.get('/data-user/cek-email/' + form.email).then((res) => { return res.data }) : 'true'
-        form.kode  = (levelSelected.value.value === 2 ? kecamatanSelected.value.value : (levelSelected.value.value === 3 ? desaSelected.value.value : (levelSelected.value.value === 4 ? (desaSelected.value.value+'-'+tpsSelected.value.value) : null)))
+        form.kode  = (levelSelected.value.value === 2 ? kecamatanSelected.value.value : (levelSelected.value.value === 3 ? desaSelected.value.value : (levelSelected.value.value === 4 ? (desaSelected.value.value+'-'+tpsSelected.value.value) : 0)))
         form.level = levelSelected.value.value
         
         // submitting if validated

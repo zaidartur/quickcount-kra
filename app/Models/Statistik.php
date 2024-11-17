@@ -134,4 +134,60 @@ class Statistik extends Model
 
         return $res;
     }
+
+    public function statistik_tps($kec)
+    {
+        $data_tps = DB::table('data_dpt as dpt')
+                    ->leftJoin('data_desa as dd', 'dd.full_id', '=', 'dpt.full_id')
+                    ->select('dpt.*', 'dd.desakel_name')
+                    ->where('dpt.kec_id', $kec)->orderBy('dpt.full_id', 'asc')->orderBy('dpt.no_tps', 'asc')->get();
+        $paslons  = DB::table('data_paslon')->where('tahun', date('Y'))->orderBy('no_urut')->get();
+        $res      = [];
+        foreach ($data_tps as $d => $tps) {
+            $vtps = DB::table('data_voting')->where('tahun_vote', date('Y'))->where('desakel_id', $tps->full_id)->where('dpt_id', $tps->id)->first();
+            $total = 0;
+            $valid = 0;
+            $invalid = 0;
+            $data_paslon = [];
+
+            // paslon init
+            foreach ($paslons as $ps) {
+                $data_paslon[] = [
+                    'uuid'  => $ps->uuid_paslon,
+                    'nama'  => $ps->nama_paslon,
+                    'urut'  => $ps->no_urut,
+                    'foto'  => $ps->foto_paslon,
+                    'voting'=> 0,
+                ];
+            }
+
+            if (!empty($vtps->vote_sah)) {
+                $arr_paslon = json_decode($vtps->vote_sah);
+                $total = intval($vtps->total_vote);
+                $invalid = intval($vtps->vote_tidaksah);
+                foreach ($arr_paslon as $a => $arrp) {
+                    foreach ($data_paslon as $d => $dp) {
+                        if ($arrp->uuid == $dp['uuid']) {
+                            $data_paslon[$d]['voting'] = intval($dp['voting']) + intval($arrp->point);
+                        }
+                    }
+                    $valid = $valid + intval($arrp->point);
+                }
+            }
+
+            $res[] = [
+                'name'      => ($tps->no_tps < 10 ? ('00'.$tps->no_tps) : (($tps->no_tps > 9 && $tps->no_tps < 100) ? ('0'.$tps->no_tps) : $tps->no_tps)),
+                // 'name'      => $tps->no_tps,
+                'desa'      => $tps->desakel_name,
+                'full_id'   => $tps->full_id,
+                'kec_id'    => $tps->kec_id,
+                'total'     => $total,
+                'valid'     => $valid,
+                'invalid'   => $invalid,
+                'paslon'    => $data_paslon,
+            ];
+        }
+
+        return $res;
+    }
 }

@@ -55,7 +55,7 @@ createInertiaApp({
         // initSiteTheme();
 
         // start the app
-        return createApp({ render: () => h(App, props) })
+        const apps = createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue, Ziggy)
             .use(PrimeVue, {
@@ -99,6 +99,11 @@ createInertiaApp({
             .component('Head', Head)
             .component('Link', Link)
             .mount(el);
+
+        //remove data-page element when it mounted
+        delete el.dataset.page
+        
+        return apps;
     },
     progress: {
         // color: '#4B5563',

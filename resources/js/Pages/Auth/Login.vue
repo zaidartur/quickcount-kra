@@ -19,7 +19,7 @@ const errTitle = ref('')
 const page = usePage().props
 const apps = page.apps
 const env = page.env
-console.log('login', page)
+
 const submit = async () => {
     if (form.email.length > 0 && form.password.length > 0) {
         if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(form.email)) {
