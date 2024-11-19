@@ -9,6 +9,7 @@ import Button from 'primevue/button';
 import Toolbar from 'primevue/toolbar';
 import Tag from 'primevue/tag';
 import Popover from 'primevue/popover';
+import Divider from 'primevue/divider';
 
 const page  = usePage()
 const message = page.props.flash.message
@@ -193,6 +194,9 @@ const detail_tps = (event, datas) => {
     <div>
         <div class="card">
             <Toolbar class="mb-6" v-if="auth.level < 2">
+                <template #start>
+                    <h5><i class="pi pi-database"></i> Tabel Data Suara Masuk Tiap Kecamatan</h5>
+                </template>
                 <template #end>
                     <!-- <Button label="Import" icon="pi pi-download" severity="success" class="mr-2" @click="openNew" outlined /> -->
                     <Button label="Export ke Excel" icon="pi pi-upload" severity="primary" @click="export_data()" :disabled="desa.length > 0 ? false : true" outlined />
@@ -205,11 +209,13 @@ const detail_tps = (event, datas) => {
                 :value="dataProgress"
                 dataKey="id"
                 :paginator="true"
-                :rows="10"
+                :rows="20"
                 :filters="filters"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                :rowsPerPageOptions="[5, 10, 25]"
+                :rowsPerPageOptions="[5, 10, 20, 25]"
                 currentPageReportTemplate="Menampilkan {first} sampai {last} dari {totalRecords} Kecamatan"
+                scrollable 
+                scrollHeight="500px"
             >
                 <template #header>
                     <div class="flex flex-wrap justify-end gap-2">
@@ -218,28 +224,28 @@ const detail_tps = (event, datas) => {
                     </div>
                 </template>
 
-                <Column expander style="width: 5rem" header="Paslon" />
-                <Column field="" header="Kecamatan" sortable style="min-width: 16rem">
+                <Column expander style="width: 5rem" frozen header="Paslon" />
+                <Column field="" header="Kecamatan" frozen style="min-width: 12rem">
                     <template #body="slotProps">
                         <b>{{ slotProps.data.kec_name }}</b>
                     </template>
                 </Column>
-                <Column field="" header="Jumlah DPT" sortable style="min-width: 16rem">
+                <Column field="" header="Jumlah DPT" style="min-width: 12rem">
                     <template #body="slotProps">
                         <Tag :value="formatNumber(slotProps.data.dpt)" :severity="'primary'" />
                     </template>
                 </Column>
-                <Column field="" header="Suara Masuk" sortable style="min-width: 16rem">
+                <Column field="" header="Suara Masuk" style="min-width: 12rem">
                     <template #body="slotProps">
                         <Tag :value="formatNumber(slotProps.data.total)" :severity="'info'" />
                     </template>
                 </Column>
-                <Column field="" header="Suara Sah" sortable style="min-width: 16rem">
+                <Column field="" header="Suara Sah" style="min-width: 12rem">
                     <template #body="slotProps">
                         <Tag :value="formatNumber(slotProps.data.total - parseInt(slotProps.data.invalid))" :severity="'success'" />
                     </template>
                 </Column>
-                <Column field="" header="Suara Tidak Sah" sortable style="min-width: 16rem">
+                <Column field="" header="Suara Tidak Sah" style="min-width: 12rem">
                     <template #body="slotProps">
                         <Tag :value="formatNumber(slotProps.data.invalid)" :severity="'danger'" />
                     </template>
@@ -258,7 +264,16 @@ const detail_tps = (event, datas) => {
                                     {{ slotProps.data.urut }} &middot; {{ slotProps.data.nama }}
                                 </template>
                             </Column>
-                            <Column field="voting" header="Jumlah Suara"></Column>
+                            <Column field="voting" header="Jumlah Suara">
+                                <template #body="slotProps">
+                                    {{ formatNumber(slotProps.data.voting) }}
+                                </template>
+                            </Column>
+                            <Column field="voting" header="Persentase">
+                                <template #body="slotProp">
+                                    {{ slotProp.data.voting > 0 ? ((slotProp.data.voting / slotProps.data.total) * 100).toFixed(1) : 0 }}%
+                                </template>
+                            </Column>
                         </DataTable>
                     </div>
                 </template>
@@ -268,7 +283,7 @@ const detail_tps = (event, datas) => {
         <Dialog v-model:visible="detailDialog" :style="{ width: '850px' }" :header="headerTitle" :modal="true" :closable="true" >
             <div>
                 <h6 class="text-center">Jumlah DPT : {{ formatNumber(rawDesa.dpt) }} || Jumlah TPS : {{ formatNumber(rawDesa.tps_total) }}</h6>
-                <DataTable v-model:expandedRows="detailTerpilih" :value="detailDesa" ref="dt" dataKey="id" scrollable scrollHeight="flex" tableStyle="max-width: 850px">
+                <DataTable v-model:expandedRows="detailTerpilih" :value="detailDesa" ref="dt" dataKey="id" scrollable scrollHeight="350px" tableStyle="max-width: 850px">
                     <template #header>
                         <div class="flex flex-wrap justify-start gap-2">
                             <Button text icon="pi pi-plus" label="Buka Semua" @click="expandDialog" />
@@ -333,8 +348,9 @@ const detail_tps = (event, datas) => {
         <Popover ref="op">
             <div v-if="desaSelected" class="rounded flex flex-col">
                 <div>
-                    <h6 class="text-center">Data TPS di Desa/Kel. {{ desaSelectedRaw.desakel_name }}</h6>
-                    <h6 class="text-center">Jumlah DPT : {{ formatNumber(desaSelectedRaw.dpt) }}</h6>
+                    <h6 class="text-center">Data TPS di Desa/Kel. {{ desaSelectedRaw.desakel_name }} | Jumlah DPT : {{ formatNumber(desaSelectedRaw.dpt) }}</h6>
+                    <!-- <h6 class="text-center">Jumlah DPT : {{ formatNumber(desaSelectedRaw.dpt) }}</h6> -->
+                     <Divider />
                     <DataTable 
                         v-model:expandedRows="expandedTPS" 
                         :value="desaSelected" 

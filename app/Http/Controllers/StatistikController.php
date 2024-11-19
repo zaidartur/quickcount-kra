@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Crypt;
 
 class StatistikController extends Controller
 {
@@ -109,6 +110,7 @@ class StatistikController extends Controller
             'alldata'   => $this->vote->data_voting_paslon_kecamatan($kec),
             'kecamatan' => $this->data->detail_kecamatan($kec),
             'tps'       => $this->statistik->statistik_tps($kec),
+            // 'ini'       => Crypt::encryptString('Hello'),
         ];
         return view('template_suara_kecamatan', $data);
     }
