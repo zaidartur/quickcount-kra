@@ -253,7 +253,7 @@ const getDesa = (kc) => {
 function confirmDeleteProduct(prod) {
     editData.value = prod
     deleteProductDialog.value = true
-    console.log(editData.value)
+    // console.log(editData.value)
 }
 
 function deleteProduct() {

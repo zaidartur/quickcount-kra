@@ -5,9 +5,9 @@
 import express from 'express';
 import { createServer } from 'node:http';
 import { Server } from 'socket.io';
-const httpServer = createServer();
 
 const app = express();
+const httpServer = createServer(app);
 // const server = createServer(app);
 // const io = new Server(server);
 const io = new Server(httpServer, {

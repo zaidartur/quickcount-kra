@@ -134,7 +134,7 @@ const saveDesa = () => {
     if (checkKecamatan() && checkCode() && checkName()) {
         if (form.code > 100 && form.code < 9999) {
             form.kec = kecamatanTerpilih.value.value
-            console.log(form)
+            // console.log(form)
             form.post('/data-wilayah/desa', {
                 resetOnSuccess: true,
                 onSuccess: (res) => {

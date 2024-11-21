@@ -72,7 +72,7 @@ const new_paslon = () => {
     src.value = null
     resetError()
     paslonDialog.value = true
-    console.log(form)
+    // console.log(form)
 }
 
 const edit_paslon = (props) => {
@@ -178,12 +178,11 @@ const onFileSelect = (event) => {
         progressSpinner.value = false
     }
 }
-console.log(window.location.pathname)
 
 const save_paslon = () => {
     submitted.value = true
     if (checkName() && checkNomor() && checkTahun() && checkFile()) {
-        console.log(form)
+        // console.log(form)
         form.post('/setting/tambah-paslon', {
             resetOnSuccess: true,
             onSuccess: (res) => {

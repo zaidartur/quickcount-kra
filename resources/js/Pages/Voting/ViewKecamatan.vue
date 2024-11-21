@@ -257,6 +257,7 @@ const new_data = () => {
     errorTPS.value = ''
     initPaslon()
     form.voteInvalid = 0
+    rekapInputan.value = 0
     // desa_existing()
     addDialog.value = true
 }
@@ -424,6 +425,7 @@ const editVoteDialog = (data,type) => {
 
 const editData = () => {
     dataPaslon.value = dataEdit.value.valid
+    const _total = totalVote()
     form.id         = dataEdit.value.id
     form.uuid       = dataEdit.value.uuid_vote
     form.kec        = dataEdit.value.kec_id
@@ -432,12 +434,13 @@ const editData = () => {
     form.voteValid  = JSON.stringify(dataEdit.value.valid)
     // form.voteValid  = dataEdit.value.valid
     form.voteInvalid = dataEdit.value.invalid
-    form.totalVote  = totalVote()
+    form.totalVote  = _total
     form.user       = auth.uuid
     form.type       = 'update'
 
     invalidVote.value = dataEdit.value.invalid
     votingPoint.value = JSON.stringify(dataEdit.value.valid)
+    rekapInputan.value = _total
 
     datas.desa.map((ds) => {
         if (ds.full_id === dataEdit.value.desakel_id) {
@@ -733,7 +736,9 @@ const isMobile = () => {
                     <Message severity="error" class="">{{ errorTPS }}</Message>
                 </div>
                 <div v-if="jumlahDPT">
-                    <label for="jml_dpt">Jumlah DPT : {{ jumlahDPT }} || Jumlah Input Data : {{ formatNumber(rekapInputan) }}</label>
+                    <label for="jml_dpt">
+                        Jumlah DPT : {{ jumlahDPT }} || Jumlah Input Data : {{ formatNumber(rekapInputan) }} <i class="pi pi-verified" style="color: green" v-if="jumlahDPT.toString() === rekapInputan.toString()"></i>
+                    </label>
                 </div>
                 <div class="grid grid-cols-1">
                     <div class="mb-5" v-for="(psl, p) in paslons">

@@ -162,7 +162,7 @@ const export_data = async() => {
 }
 
 const detailData = async(prop) => {
-    console.log('detail', prop)
+    // console.log('detail', prop)
     headerTitle.value = 'Detail Kecamatan ' + prop.kec_name
     rawDesa.value = prop
     detailDesa.value = prop.desas
@@ -183,7 +183,7 @@ const detail_tps = (event, datas) => {
     // desaSelectedRaw.value = datas
     // desaSelected.value = datas.tps
     // op.value.show(event)
-    console.log(datas.id, desaSelectedRaw.value)
+    // console.log(datas.id, desaSelectedRaw.value)
 }
 
 </script>

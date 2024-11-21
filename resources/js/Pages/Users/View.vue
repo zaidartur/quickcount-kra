@@ -497,7 +497,7 @@ const detailUser = (prop) => {
     form.type = 'detail'
     submitted.value = true
     closableModal.value = true
-    console.log(prop)
+    // console.log(prop)
 }
 
 const editUser = (prop) => {
@@ -563,7 +563,7 @@ const editUser = (prop) => {
             label: notps(prop.no_tps),
             value: parseInt(isKode.split('-')[1])
         }
-        console.log(tpsSelected.value, selectTPS.value)
+        // console.log(tpsSelected.value, selectTPS.value)
     }
     
     submitted.value = false

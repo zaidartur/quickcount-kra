@@ -122,7 +122,13 @@ class SettingController extends Controller
         $uuid = Uuid::uuid4()->toString();
             
         if (isset($request->foto)) {
-            $upload_path = public_path() . '/uploads/paslon';
+            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                // Windows Path
+                $upload_path = public_path() . '\uploads\paslon';
+            } else {
+                $upload_path = public_path() . '/uploads/paslon';
+            }
+            
             if (!File::exists($upload_path)) {
                 File::makeDirectory($upload_path, 0777, true, true);
             }
@@ -170,7 +176,12 @@ class SettingController extends Controller
             if (File::exists(public_path($check->foto_paslon))) {
                 File::delete(public_path($check->foto_paslon));
             }
-            $upload_path = public_path() . '/uploads/paslon';
+            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                $upload_path = public_path() . '\uploads\paslon';
+            } else {
+                $upload_path = public_path() . '/uploads/paslon';
+            }
+            // $upload_path = public_path() . '/uploads/paslon';
             if (!File::exists($upload_path)) {
                 File::makeDirectory($upload_path, 0777, true, true);
             }

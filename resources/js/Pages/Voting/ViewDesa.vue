@@ -258,6 +258,7 @@ const new_data = async() => {
     initPaslon()
     form.voteInvalid = 0
     jumlahDPT.value = null
+    rekapInputan.value = 0
     tpsSelected.value = {}
     // desa_existing()
     addDialog.value = true
@@ -434,6 +435,7 @@ const editData = async() => {
         dpt: dataEdit.value.total
     }
     jumlahDPT.value = dataEdit.value.total
+    rekapInputan.value = parseInt(dataEdit.value.total_vote)
 }
 
 const checkDiffVote = () => {
@@ -630,7 +632,9 @@ const formatNumber = (num) => {
                     <Message severity="error" class="">{{ errorDesa }}</Message>
                 </div>
                 <div v-if="jumlahDPT">
-                    <label for="jml_dpt">Jumlah DPT : {{ jumlahDPT }} || Jumlah Input Data : {{ formatNumber(rekapInputan) }}</label>
+                    <label for="jml_dpt">
+                        Jumlah DPT : {{ jumlahDPT }} || Jumlah Input Data : {{ formatNumber(rekapInputan) }} <i class="pi pi-verified" style="color: green" v-if="jumlahDPT.toString() === rekapInputan.toString()"></i>
+                    </label>
                 </div>
                 <div class="grid grid-cols-1">
                     <div class="mb-5" v-for="(psl, p) in paslons">
