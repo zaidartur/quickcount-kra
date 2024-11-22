@@ -16,6 +16,7 @@ import Tag from 'primevue/tag';
 import Card from 'primevue/card';
 import MeterGroup from 'primevue/metergroup';
 import Divider from 'primevue/divider';
+import { data } from 'autoprefixer';
 
 const page  = usePage()
 const message = page.props.flash.message
@@ -104,7 +105,8 @@ const initPaslon = () => {
 }
 
 initData()
-initPaslon
+initPaslon()
+
 const dt = ref()
 const isDesa = ref()
 const dataEdit = ref(null)
@@ -253,10 +255,12 @@ const new_data = () => {
     form.type = 'new'
     desaSelected.value = []
     errorDesa.value = ''
+    datatps.value = []
     tpsSelected.value = {}
     errorTPS.value = ''
     initPaslon()
     form.voteInvalid = 0
+    jumlahDPT.value = null
     rekapInputan.value = 0
     // desa_existing()
     addDialog.value = true
@@ -283,6 +287,7 @@ const checkDesa = () => {
         errorDesa.value = ''
         jumlahDPT.value = ''
         get_data_tps()
+        get_data_vote()
         return true
     } else {
         errorDesa.value = 'Mohon untuk memilih desa/kelurahan terlebih dahulu'
@@ -298,6 +303,31 @@ const check_tps = () => {
     } else {
         errorTPS.value = 'Mohon untuk memilih nomor TPS terlebih dahulu'
         return false
+    }
+}
+
+const get_data_vote = async() => {
+    let datas = []
+    if (desaSelected.value && desaSelected.value.value !== undefined) {
+        await axios.get('/suara-masuk/get-data-vote/' + desaSelected.value.value).then((res) => {
+            if (res.data) {
+                datas = res.data
+            }
+        })
+    }
+    // filter TPS
+    if (datatps.value.length > 0 && datas.length > 0) {
+        let _uid = []
+        datas.map((vd) => {
+            _uid.push(vd.dpt_id)
+        })
+        
+        const filter = datatps.value.filter((ds) => {
+            if (!_uid.includes(ds.value)) {
+                return ds
+            }
+        })
+        datatps.value = filter
     }
 }
 
@@ -417,21 +447,28 @@ const checkPwd = async() => {
 }
 
 const editVoteDialog = (data,type) => {
+    console.log('aa', data)
     form.type = type
     dataEdit.value = data
     myPassword.value = null
-    confirmDialog.value = true
+    // confirmDialog.value = true
+    dataPaslon.value  = JSON.stringify(data.valid)
+    editData()
+    addDialog.value = true
+    form.type = 'update'
 }
 
-const editData = () => {
+const editData = async() => {
     dataPaslon.value = dataEdit.value.valid
     const _total = totalVote()
     form.id         = dataEdit.value.id
     form.uuid       = dataEdit.value.uuid_vote
+    form.dpt        = dataEdit.value.dpt_id
     form.kec        = dataEdit.value.kec_id
-    form.desa       = dataEdit.value.desakel_id
-    form.desaName   = dataEdit.value.desakel_name
-    form.voteValid  = JSON.stringify(dataEdit.value.valid)
+    form.desa       = dataEdit.value.full_id
+    form.desaName   = dataEdit.value.full_id
+    form.tps        = dataEdit.value.no_tps
+    // form.voteValid  = JSON.stringify(dataEdit.value.valid)
     // form.voteValid  = dataEdit.value.valid
     form.voteInvalid = dataEdit.value.invalid
     form.totalVote  = _total
@@ -442,14 +479,29 @@ const editData = () => {
     votingPoint.value = JSON.stringify(dataEdit.value.valid)
     rekapInputan.value = _total
 
+    desaSelected.value = {}
+    desas.value = []
     datas.desa.map((ds) => {
-        if (ds.full_id === dataEdit.value.desakel_id) {
+        desas.value.push({
+            label: ds.desakel_name,
+            value: ds.full_id
+        })
+        if (ds.full_id === dataEdit.value.full_id) {
             desaSelected.value = {
                 label: ds.desakel_name,
                 value: ds.full_id
             }
         }
     })
+    
+    await get_data_tps()
+    tpsSelected.value = {
+        label: notps(dataEdit.value.no_tps),
+        value: dataEdit.value.dpt_id,
+        dpt: dataEdit.value.dpt
+    }
+    jumlahDPT.value = dataEdit.value.dpt
+    rekapInputan.value = dataEdit.value.num_valid
 }
 
 const checkDiffVote = () => {
@@ -491,7 +543,9 @@ const updateVote = () => {
     checkInvalidDiff()
 
     submitted.value = true
-    // console.log(form)
+    form.voteValid  = JSON.stringify(dataPaslon.value)
+    form.totalVote  = totalVote()
+    console.log(form)
     form.post('/suara-masuk/tambah-data', {
         resetOnSuccess: true,
         onSuccess: (res) => {
@@ -501,6 +555,7 @@ const updateVote = () => {
             if (messages.status === 'success') {
                 // form.type = null
                 addDialog.value = false
+                detailDialog.value = false
             }
             submitted.value = false
         },
@@ -627,10 +682,10 @@ const isMobile = () => {
                 <Column field="desakel_name" header="Nama Desa/Kel"></Column>
                 <Column field="" header="Suara Sah">
                     <template #body="slotProps">
-                        {{ formatNumber(slotProps.data.total - parseInt(slotProps.data.invalid)) }}
+                        {{ formatNumber(slotProps.data.num_valid) }}
                     </template>
                 </Column>
-                <Column field="invalid" header="Suara Tidak Sah"></Column>
+                <!-- <Column field="invalid" header="Suara Tidak Sah"></Column> -->
                 <Column field="total" header="Total Suara">
                     <template #body="slotProps">
                         <b>
@@ -653,8 +708,8 @@ const isMobile = () => {
                 </Column>
                 <Column :exportable="false" style="min-width: 3rem" header="Opsi">
                     <template #body="slotProps">
-                        <Button icon="pi pi-info-circle" outlined rounded v-tooltip.bottom="'Detail Desa ' + slotProps.data.desakel_name" class="mr-2" severity="info" @click="detailVoteDialog(slotProps.data)" />
-                        <!-- <Button icon="pi pi-pencil" outlined rounded v-tooltip.bottom="'Edit Data ' + slotProps.data.desakel_name" class="mr-2" severity="warn" @click="editVoteDialog(slotProps.data, 'edit')" /> -->
+                        <!-- <Button icon="pi pi-info-circle" outlined rounded v-tooltip.bottom="'Detail Desa ' + slotProps.data.desakel_name" class="mr-2" severity="info" @click="detailVoteDialog(slotProps.data)" /> -->
+                        <Button icon="pi pi-pencil" outlined rounded v-tooltip.bottom="'Edit Data ' + slotProps.data.desakel_name" class="mr-2" severity="warn" @click="detailVoteDialog(slotProps.data)" />
                     </template>
                 </Column>
                 <template #expansion="slotProps">
@@ -743,12 +798,12 @@ const isMobile = () => {
                 <div class="grid grid-cols-1">
                     <div class="mb-5" v-for="(psl, p) in paslons">
                         <label for="name" class="block font-bold">{{ psl.nama_paslon }}</label>
-                        <InputNumber :id="`name_${psl.uuid_paslon}`" v-model="dataPaslon[p].point" required="true" :min="1" :max="100000" @blur="sum_suara_masuk" placeholder="0" fluid :disabled="submitted" />
+                        <InputNumber :id="`name_${psl.uuid_paslon}`" v-model="dataPaslon[p].point" required="true" :min="0" :max="100000" @blur="sum_suara_masuk" placeholder="0" fluid :disabled="submitted" />
                     </div>
-                    <div class="mb-10">
+                    <!-- <div class="mb-10">
                         <label for="name" class="block font-bold">Suara Tidak Sah</label>
-                        <InputNumber id="invalid" v-model="form.voteInvalid" required="true" :min="1" :max="100000" placeholder="0" @blur="sum_suara_masuk" fluid :disabled="submitted" />
-                    </div>
+                        <InputNumber id="invalid" v-model="form.voteInvalid" required="true" :min="0" :max="100000" placeholder="0" @blur="sum_suara_masuk" fluid :disabled="submitted" />
+                    </div> -->
                 </div>
             </div>
             <template #footer>
@@ -775,14 +830,14 @@ const isMobile = () => {
                     </Column>
                     <Column field="" header="Suara Sah">
                         <template #body="slotProps">
-                            {{ formatNumber(slotProps.data.total - parseInt(slotProps.data.invalid)) }}
+                            {{ formatNumber(slotProps.data.num_valid) }}
                         </template>
                     </Column>
-                    <Column field="" header="Suara Tidak Sah">
+                    <!-- <Column field="" header="Suara Tidak Sah">
                         <template #body="slotProps">
                             {{ formatNumber(parseInt(slotProps.data.invalid)) }}
                         </template>
-                    </Column>
+                    </Column> -->
                     <Column field="" header="Jumlah Suara">
                         <template #body="slotProps">
                             <Tag 
@@ -795,6 +850,11 @@ const isMobile = () => {
                     <Column field="" header="Jumlah DPT">
                         <template #body="slotProps">
                             {{ formatNumber(slotProps.data.dpt) }}
+                        </template>
+                    </Column>
+                    <Column :exportable="false" style="min-width: 3rem" header="Opsi">
+                        <template #body="slotProps">
+                            <Button icon="pi pi-pencil" outlined rounded v-tooltip.bottom="'Edit Data TPS ' + notps(slotProps.data.no_tps)" class="mr-2" severity="warn" @click="editVoteDialog(slotProps.data, 'edit')" />
                         </template>
                     </Column>
                     <template #expansion="slotProps">

@@ -48,9 +48,7 @@ const model = ref([
     },
     {
         label: 'MASTER DATA',
-        items: [
-            { label: 'DPT', icon: 'pi pi-users', to: '/daftar-pemilih-tetap' },
-        ]
+        items: []
     },
     {
         label: 'SETTING',
@@ -73,10 +71,13 @@ if (user.level < 2) {
         { label: 'Setting', icon: 'pi pi-cog', to: '/setting' },
     )
 }
-if (user.level < 3) {
+if (user.level < 2) {
     // model.value[0].items.push(
     //     { label: 'Statistik', icon: 'pi pi-database', to: '/statistik' },
     // )
+    model.value[1].items.unshift(
+        { label: 'DPT', icon: 'pi pi-users', to: '/daftar-pemilih-tetap' },
+    )
     model.value[1].items.unshift(
         { label: 'Data Wilayah', icon: 'pi pi-map', to: '/data-wilayah' },
     )

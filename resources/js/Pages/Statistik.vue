@@ -9,12 +9,13 @@ const datas = defineProps({
     kec: Object,
     desa: Object,
     statkec: Object,
+    dpt: Number,
 })
 </script>
 
 <template>
     <app-layout :apps="datas.apps">
-        <Statistik :paslon="datas.paslon" :kec="datas.kec" :desa="datas.desa" :stat-kec="datas.statkec" />
+        <Statistik :paslon="datas.paslon" :kec="datas.kec" :desa="datas.desa" :stat-kec="datas.statkec" :dpt="datas.dpt" />
     </app-layout>
 </template>
     

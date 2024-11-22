@@ -36,6 +36,7 @@ class StatistikController extends Controller
             'kec'       => $this->data->data_kecamatan(),
             'desa'      => $this->data->data_desa(),
             'statkec'   => $this->statistik->statistik_kecamatan(),
+            'dpt'       => $this->data->sum_dpt(),
         ]);
     }
 
@@ -48,6 +49,7 @@ class StatistikController extends Controller
             'kec'       => $this->data->data_kecamatan(),
             'desa'      => $this->data->data_desa(),
             'statkec'   => $this->statistik->tabel_kecdesatps(),
+            'dpt'       => $this->data->sum_dpt(),
         ]);
     }
 
@@ -110,6 +112,7 @@ class StatistikController extends Controller
             'alldata'   => $this->vote->data_voting_paslon_kecamatan($kec),
             'kecamatan' => $this->data->detail_kecamatan($kec),
             'tps'       => $this->statistik->statistik_tps($kec),
+            'dpt'       => $this->data->sum_dpt(),
             // 'ini'       => Crypt::encryptString('Hello'),
         ];
         return view('template_suara_kecamatan', $data);

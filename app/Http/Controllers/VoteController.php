@@ -116,14 +116,16 @@ class VoteController extends Controller
     public function update_voting($request)
     {
         $data = [
-            'kec_id'        => $request->kec,
-            'desakel_id'    => $request->desa,
-            'desakel_name'  => $request->desaName,
+            // 'dpt_id'        => $request->dpt,
+            // 'kec_id'        => $request->kec,
+            // 'desakel_id'    => $request->desa,
+            // 'desakel_name'  => $request->desaName,
+            // 'no_tps'        => intval($request->tps),
             'vote_sah'      => $request->voteValid,
             'vote_tidaksah' => $request->voteInvalid ?? 0,
             'tahun_vote'    => date('Y'),
             'total_vote'    => $request->totalVote,
-            'user'          => $request->user,
+            'user'          => Auth::user()->uuid,
             'updated_at'    => date('Y-m-d H:i:s'),
         ];
 
@@ -137,6 +139,11 @@ class VoteController extends Controller
         }
 
         return ['status' => $status, 'msg' => $msg];
+    }
+
+    public function get_tps($desa)
+    {
+        return $this->vote->get_tps($desa);
     }
 
     public function check_password($pwd)

@@ -242,14 +242,14 @@ const detail_tps = (event, datas) => {
                 </Column>
                 <Column field="" header="Suara Sah" style="min-width: 12rem">
                     <template #body="slotProps">
-                        <Tag :value="formatNumber(slotProps.data.total - parseInt(slotProps.data.invalid))" :severity="'success'" />
+                        <Tag :value="formatNumber(slotProps.data.valid)" :severity="'success'" />
                     </template>
                 </Column>
-                <Column field="" header="Suara Tidak Sah" style="min-width: 12rem">
+                <!-- <Column field="" header="Suara Tidak Sah" style="min-width: 12rem">
                     <template #body="slotProps">
                         <Tag :value="formatNumber(slotProps.data.invalid)" :severity="'danger'" />
                     </template>
-                </Column>
+                </Column> -->
                 <Column :exportable="false" style="min-width: 12rem" header="Info">
                     <template #body="slotProps">
                         <Button icon="pi pi-info-circle" outlined rounded class="mr-2" v-tooltip.bottom="`Lihat Detail ${slotProps.data.kec_name}`" @click="detailData(slotProps.data)" />
@@ -301,11 +301,11 @@ const detail_tps = (event, datas) => {
                             {{ formatNumber(slotProps.data.valid) }}
                         </template>
                     </Column>
-                    <Column field="" header="Suara Tidak Sah">
+                    <!-- <Column field="" header="Suara Tidak Sah">
                         <template #body="slotProps">
                             {{ formatNumber(parseInt(slotProps.data.invalid)) }}
                         </template>
-                    </Column>
+                    </Column> -->
                     <Column field="" header="Jumlah Suara">
                         <template #body="slotProps">
                             <Tag 
@@ -376,11 +376,11 @@ const detail_tps = (event, datas) => {
                                 {{ formatNumber(slotProps.data.valid) }}
                             </template>
                         </Column>
-                        <Column field="" header="Suara Tidak Sah">
+                        <!-- <Column field="" header="Suara Tidak Sah">
                             <template #body="slotProps">
                                 {{ formatNumber(parseInt(slotProps.data.invalid)) }}
                             </template>
-                        </Column>
+                        </Column> -->
                         <Column field="" header="Jumlah Suara">
                             <template #body="slotProps">
                                 <Tag 

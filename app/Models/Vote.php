@@ -11,6 +11,11 @@ class Vote extends Model
 {
     use HasFactory;
 
+    public function get_tps($desa)
+    {
+        return DB::table('data_voting')->where('desakel_id', $desa)->where('tahun_vote', date('Y'))->select('desakel_name', 'no_tps', 'dpt_id', 'kec_id')->get();
+    }
+
     public function data_voting()
     {
         $level = Auth::user()->level;
@@ -57,6 +62,7 @@ class Vote extends Model
                 $tps = [];
                 $data_paslon = [];
                 $total = 0;
+                $valid = 0;
                 $invalid = 0;
                 foreach ($paslons as $paslon) {
                     $data_paslon[] = [
@@ -75,6 +81,19 @@ class Vote extends Model
                                     ->select('dv.*', 'u.name', 'u.level', 'u.kode', 'dpt.total')
                                     ->where('dv.id', $dt->id)->first();
                         $paslon_tps = json_decode($fetch_tps->vote_sah);
+                        $_valid = 0;
+                        foreach ($data_paslon as $p => $dp) {
+                            foreach ($paslon_tps as $a => $pt) {
+                                if ($pt->uuid == $dp['uuid']) {
+                                    $add = intval($pt->point) + intval($dp['point']);
+                                    $data_paslon[$p]['point'] = $add;
+                                    $_valid = $_valid + intval($pt->point);
+                                }
+                            }
+                        }
+                        $invalid = $invalid + intval($fetch_tps->vote_tidaksah);
+                        $valid = $valid + $_valid;
+                        $total = $total + intval($fetch_tps->total_vote);
                         $tps[$t] = [
                             'id'        => $fetch_tps->id,
                             'uuid_vote' => $fetch_tps->uuid_vote,
@@ -83,24 +102,14 @@ class Vote extends Model
                             'full_id'   => $fetch_tps->desakel_id,
                             'no_tps'    => $fetch_tps->no_tps,
                             'valid'     => $paslon_tps,
-                            'invalid'   => $fetch_tps->vote_tidaksah,
+                            'invalid'   => intval($fetch_tps->vote_tidaksah),
+                            'num_valid' => $_valid,
                             'total'     => $fetch_tps->total_vote,
                             'dpt'       => $fetch_tps->total,
                             'user'      => $fetch_tps->name,
                             'user_lvl'  => $fetch_tps->level,
                             'user_kode' => $fetch_tps->kode,
                         ];
-
-                        foreach ($data_paslon as $p => $dp) {
-                            foreach ($paslon_tps as $a => $pt) {
-                                if ($pt->uuid == $dp['uuid']) {
-                                    $add = intval($pt->point) + intval($dp['point']);
-                                    $data_paslon[$p]['point'] = $add;
-                                }
-                            }
-                        }
-                        $invalid = $invalid + intval($fetch_tps->vote_tidaksah);
-                        $total = $total + intval($fetch_tps->total_vote);
                     }
                 }
 
@@ -112,6 +121,7 @@ class Vote extends Model
                     'full_id'       => $data_desa->full_id,
                     'valid'         => $data_paslon,
                     'invalid'       => $invalid,
+                    'num_valid'     => $valid,
                     'total'         => $total,
                     'dpt'           => $total_dpt,
                     'tps'           => $tps,

@@ -27,6 +27,7 @@ const datas = defineProps({
     kec: Object,
     desa: Object,
     statKec: Object,
+    dpt: Number,
 })
 
 const chartData = ref()
@@ -77,8 +78,8 @@ const initData = () => {
     }
     suaraSah.value = totalSeluruhSuara.value - suaraTidakSah.value
     meterSuara.value = [
-        { label: 'Suara Sah', color: '#34d399', value: suaraSah, icon: 'pi pi-check' },
-        { label: 'Suara Tidak Sah', color: '#ef4444', value: suaraTidakSah, icon: 'pi pi-times' },
+        { label: 'Persentase Suara Masuk', color: '#34d399', value: totalSeluruhSuara, icon: 'pi pi-check' },
+        // { label: 'Suara Tidak Sah', color: '#ef4444', value: suaraTidakSah, icon: 'pi pi-times' },
     ]
 }
  
@@ -277,14 +278,14 @@ const _desaMeter = (data, inv) => {
                 tooltip: d.name + ' (' + d.point + ' suara)',
             })
         })
-        meter.push({
-            label: 'Suara Tidak Sah', 
-            color: '#ef4444', 
-            value: inv, 
-            icon: 'pi pi-times',
-            uid: 'invalid',
-            tooltip: 'Suara Tidak Sah (' + inv + ')',
-        })
+        // meter.push({
+        //     label: 'Suara Tidak Sah', 
+        //     color: '#ef4444', 
+        //     value: inv, 
+        //     icon: 'pi pi-times',
+        //     uid: 'invalid',
+        //     tooltip: 'Suara Tidak Sah (' + inv + ')',
+        // })
     }
     return meter
 }
@@ -306,10 +307,10 @@ const setChartData = () => {
     let uid = dataDetail.value.paslons.map((id) => {
         return id.uuid
     })
-    label.push('Suara Tidak Sah')
-    datas.push(dataDetail.value.invalid)
-    color.push('#ef4444')
-    uid.push('invalid')
+    // label.push('Suara Tidak Sah')
+    // datas.push(dataDetail.value.invalid)
+    // color.push('#ef4444')
+    // uid.push('invalid')
 
     chartData.value = {
         labels: label,
@@ -355,7 +356,7 @@ const setChartOptions = () => {
 
             <template #end>
                 <div >
-                    <MeterGroup :value="meterSuara" :max="totalSeluruhSuara" class="w-full" v-tooltip.bottom="'Suara Sah : '+formatNumber(suaraSah)+' \n Tidak Sah : '+formatNumber(suaraTidakSah)" />
+                    <MeterGroup :value="meterSuara" :max="datas.dpt" class="w-full" v-tooltip.bottom="formatNumber(totalSeluruhSuara) +' / '+ formatNumber(parseInt(datas.dpt))" />
                 </div>
             </template>
         </Toolbar>
@@ -380,12 +381,12 @@ const setChartOptions = () => {
                         </span>
                         <ProgressBar :value="psl.voting > 0 ? parseFloat((psl.voting/camat.total)*100).toFixed(1) : 0" :max="100" v-tooltip.bottom="(psl.voting > 0 ? parseFloat((psl.voting/camat.total)*100).toFixed(1) : 0) + '%'" :id="`bar_${camat.kec_id}_${psl.uuid}`" :class="clrLabel[p]"></ProgressBar>
                     </div>
-                    <div class="mb-3">
+                    <!-- <div class="mb-3">
                         <span class="font-semibold">
                             Suara Tidak Sah
                         </span>
                         <ProgressBar :value="camat.invalid > 0 ? (parseFloat(camat.invalid/camat.total)*100).toFixed(1) : 0" v-tooltip.bottom="(camat.invalid > 0 ? (parseFloat(camat.invalid/camat.total)*100).toFixed(1) : 0) + '%'" class="red"></ProgressBar>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>
@@ -420,12 +421,12 @@ const setChartOptions = () => {
                             </span>
                             <ProgressBar :value="parseFloat((psl.voting/dataDetail.total)*100).toFixed(1)" v-tooltip.bottom="(psl.voting > 0 ? parseFloat((psl.voting/dataDetail.total)*100).toFixed(1) : 0) + '%'" :id="`bar_${dataDetail.kec_id}_${psl.uuid}`" :class="clrLabel[s]"></ProgressBar>
                         </div>
-                        <div class="mb-3">
+                        <!-- <div class="mb-3">
                             <span class="font-semibold">
                                 Suara Tidak Sah ({{ formatNumber(dataDetail.invalid) ?? 0 }} suara)
                             </span>
                             <ProgressBar :value="(parseFloat(dataDetail.invalid/dataDetail.total)*100).toFixed(1)" v-tooltip.bottom="(dataDetail.invalid > 0 ? (parseFloat(dataDetail.invalid/dataDetail.total)*100).toFixed(1) : 0) + '%'" class="red"></ProgressBar>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
                 <Divider layout="vertical" class="!hidden md:!flex"></Divider>

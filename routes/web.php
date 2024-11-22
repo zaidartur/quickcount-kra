@@ -57,8 +57,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [VoteController::class, 'view'])->name('vote');
         Route::get('/detail/{uid}', [VoteController::class, 'detail_voting'])->name('vote.detail');
         Route::get('/cek-pwd/{pass}', [VoteController::class, 'check_password'])->name('vote.pwd');
+        Route::get('/get-data-vote/{desa}', [VoteController::class, 'get_tps'])->name('vote.tps');
 
         Route::post('/tambah-data', [VoteController::class, 'add_voting'])->name('vote.add');
+        Route::post('/update-data', [VoteController::class, 'update_voting'])->name('vote.update');
         Route::post('/hapus-data', [VoteController::class, 'delete_vote'])->name('vote.delete');
     });
 

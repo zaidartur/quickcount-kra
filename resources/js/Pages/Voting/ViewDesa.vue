@@ -641,10 +641,10 @@ const formatNumber = (num) => {
                         <label for="name" class="block font-bold">{{ psl.nama_paslon }}</label>
                         <InputNumber :id="`name_${psl.uuid_paslon}`" v-model="dataPaslon[p].point" required="true" :min="0" :max="100000" placeholder="0" fluid @blur="sum_suara_masuk" :disabled="submitted" />
                     </div>
-                    <div class="mb-10">
+                    <!-- <div class="mb-10">
                         <label for="name" class="block font-bold">Suara Tidak Sah</label>
                         <InputNumber id="invalid" v-model="form.voteInvalid" required="true" :min="0" :max="100000" placeholder="0" fluid @blur="sum_suara_masuk" :disabled="submitted" />
-                    </div>
+                    </div> -->
                 </div>
             </div>
             <template #footer>

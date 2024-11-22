@@ -105,7 +105,8 @@ socket.on('update-paslon', (up) => {
         </div>
 
         <div class="w-full text-center">
-            <label><i>* Suara Tidak Sah : {{ formatNumber(voteInvalid) }} Suara ({{ (voteInvalid / (voteValid+voteInvalid) * 100).toFixed(1) ?? 0 }}%)</i></label>
+            <!-- <label><i>* Suara Tidak Sah : {{ formatNumber(voteInvalid) }} Suara ({{ (voteInvalid / (voteValid+voteInvalid) * 100).toFixed(1) ?? 0 }}%)</i></label> -->
+             &nbsp;
         </div>
     </div>
 
