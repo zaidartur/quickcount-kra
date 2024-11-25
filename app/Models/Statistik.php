@@ -20,6 +20,7 @@ class Statistik extends Model
         foreach ($kec as $key => $value) {
             $votes = DB::table('data_voting')->where('kec_id', $value->kec_id)->where('tahun_vote', date('Y'))->get();
             $total = 0;
+            $valid = 0;
             $invalid = 0;
             $data_paslon = [];
 
@@ -42,6 +43,7 @@ class Statistik extends Model
                     foreach ($data_paslon as $d => $dp) {
                         if ($arrp->uuid == $dp['uuid']) {
                             $data_paslon[$d]['voting'] = intval($dp['voting']) + intval($arrp->point);
+                            $valid = $valid + intval($arrp->point);
                         }
                     }
                 }
@@ -52,6 +54,7 @@ class Statistik extends Model
                 'kec_name'      => $value->kec_name,
                 'kec_id'        => $value->kec_id,
                 'total'         => $total,
+                'valid'         => $valid,
                 'invalid'       => $invalid,
                 'paslons'       => $data_paslon,
             ];
@@ -83,6 +86,7 @@ class Statistik extends Model
                 $tps_total = 0;
                 $tps_valid = [];
                 $tps_invalid = 0;
+                $num_valid = 0;
                 foreach ($paslons as $paslon) {
                     $tps_valid[] = [
                         'uuid'  => $paslon->uuid_paslon,
@@ -103,6 +107,7 @@ class Statistik extends Model
                             if ($tp->uuid == $tv['uuid']) {
                                 $sum = intval($tv['point']) + intval($tp->point);
                                 $tps_valid[$v]['point'] = $sum;
+                                $num_valid = $num_valid + intval($tp->point);
                             }
                         }
                     }
@@ -111,6 +116,7 @@ class Statistik extends Model
                 $res[$d] += [
                     'total'     => $tps_total,
                     'valid'     => $tps_valid,
+                    'num_valid' => $num_valid,
                     'invalid'   => $tps_invalid,
                 ];
             } else {
@@ -127,6 +133,7 @@ class Statistik extends Model
                 $res[$d] += [
                     'total'     => 0,
                     'valid'     => $vote,
+                    'num_valid' => 0,
                     'invalid'   => 0,
                 ];
             }

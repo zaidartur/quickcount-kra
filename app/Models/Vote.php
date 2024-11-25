@@ -22,14 +22,15 @@ class Vote extends Model
         if ($level == 2) {
             $res = $this->data_voting_kecamatan();
         } elseif ($level == 3) {
-            $res = DB::table('data_voting as dv')->leftJoin('data_kecamatan as dk', 'dk.kec_id', '=', 'dv.kec_id')
-                    ->leftJoin('data_desa as dd', 'dd.full_id', '=', 'dv.desakel_id')
-                    ->leftJoin('users as u', 'u.uuid', '=', 'dv.user')
-                    ->leftJoin('data_dpt as dpt', 'dpt.id', '=', 'dv.dpt_id')
-                    ->select('dv.*', 'dk.kec_name', 'dd.desakel_name', 'dd.full_id', 'u.name', 'u.level', 'u.kode', 'dpt.no_tps', 'dpt.total')
-                    ->where('dv.desakel_id', Auth::user()->kode)
-                    ->orderBy('dpt.no_tps')
-                    ->get(); 
+            // $res = DB::table('data_voting as dv')->leftJoin('data_kecamatan as dk', 'dk.kec_id', '=', 'dv.kec_id')
+            //         ->leftJoin('data_desa as dd', 'dd.full_id', '=', 'dv.desakel_id')
+            //         ->leftJoin('users as u', 'u.uuid', '=', 'dv.user')
+            //         ->leftJoin('data_dpt as dpt', 'dpt.id', '=', 'dv.dpt_id')
+            //         ->select('dv.*', 'dk.kec_name', 'dd.desakel_name', 'dd.full_id', 'u.name', 'u.level', 'u.kode', 'dpt.no_tps', 'dpt.total')
+            //         ->where('dv.desakel_id', Auth::user()->kode)
+            //         ->orderBy('dpt.no_tps')
+            //         ->get(); 
+            $res = $this->data_voting_desa();
         } elseif ($level == 4) {
             $kode = explode('-', Auth::user()->kode);
             $res = DB::table('data_voting as dv')->leftJoin('data_kecamatan as dk', 'dk.kec_id', '=', 'dv.kec_id')
@@ -159,6 +160,33 @@ class Vote extends Model
         }
 
         return $res;
+    }
+
+    public function data_voting_desa() 
+    {
+        $data = [];
+        $res = DB::table('data_voting as dv')->leftJoin('data_kecamatan as dk', 'dk.kec_id', '=', 'dv.kec_id')
+                    ->leftJoin('data_desa as dd', 'dd.full_id', '=', 'dv.desakel_id')
+                    ->leftJoin('users as u', 'u.uuid', '=', 'dv.user')
+                    ->leftJoin('data_dpt as dpt', 'dpt.id', '=', 'dv.dpt_id')
+                    ->select('dv.*', 'dk.kec_name', 'dd.desakel_name', 'dd.full_id', 'u.name', 'u.level', 'u.kode', 'dpt.no_tps', 'dpt.total')
+                    ->where('dv.desakel_id', Auth::user()->kode)
+                    ->orderBy('dpt.no_tps')
+                    ->get(); 
+
+        if (count($res) > 0) {
+            foreach ($res as $key => $value) {
+                $valid = 0;
+                $extract = json_decode($value->vote_sah);
+                foreach ($extract as $ps) {
+                    $valid = $valid + intval($ps->point);
+                }
+                $value->valid = $valid;
+                $data[] = $value;
+            }
+        }
+
+        return $data;
     }
 
     public function all_data_voting()
